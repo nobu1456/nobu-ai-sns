@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase × GitHub 自作SNS 開発ロードマップ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!--
+    <!-- Chosen Palette: Slate Warm Neutral with Supabase Emerald and Indigo Accents -->
+    <!-- Application Structure Plan: 
+         - Overview Dashboard & System Architecture Visual Diagram (built using responsive HTML/Tailwind flex grids and connectors, NO SVG).
+         - Phase-by-Phase Interactive Visual Roadmap (6 core milestones from setup to launch).
+         - Supabase Core Features Matrix (Database, Auth, Storage, Realtime).
+         - Interactive Progress Tracker with live Chart.js completion metrics so the user can track their actual build progress visually without looking at raw code.
+    -->
+    <!-- Visualization & Content Choices:
+         - Architecture Flow: HTML/CSS CSS Flexbox/Grid boxes with animated unicode indicators & border lines.
+         - Progress Analytics: Chart.js Doughnut Chart for task completion tracking.
+         - Phase Milestones: Visual badges, step cards, bulleted concepts, and action goals (Strictly NO code snippets, purely structural guidance).
+         - Visual Graphics: Pure CSS shapes, Tailwind cards, unicode visual icons (NO SVG, NO Mermaid JS).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    -->
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 200px;
+            max-height: 200px;
+        }
+        .connector-line {
+            background: linear-gradient(90deg, #10b981 0%, #6366f1 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-16">
+
+    <!-- Header Section -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 py-8 px-4 sm:px-6 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <div class="flex items-center gap-2 text-emerald-400 font-semibold text-xs tracking-wider uppercase mb-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    GitHub Pages × Supabase Starter Guide
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">自作SNS 開発ビジュアルロードマップ</h1>
+                <p class="text-slate-400 text-sm mt-1">コードなしで理解する！ゼロから始める完全クラウド連携型SNSの制作手順</p>
+            </div>
+            
+            <!-- Quick Progress Stats Header -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center gap-4 w-full md:w-auto">
+                <div>
+                    <div class="text-xs text-slate-400">開発達成度</div>
+                    <div id="progressPercent" class="text-2xl font-bold text-emerald-400">0%</div>
+                </div>
+                <div class="w-32 bg-slate-700 h-3 rounded-full overflow-hidden">
+                    <div id="progressBar" class="bg-emerald-400 h-full w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-8 space-y-12">
+
+        <!-- SECTION 1: SYSTEM ARCHITECTURE DIAGRAM -->
+        <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+            <div class="mb-6">
+                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full">全体像をつかむ</span>
+                <h2 class="text-xl font-bold text-slate-900 mt-2">自作SNSのしくみ図解（システム構成）</h2>
+                <p class="text-slate-600 text-sm mt-1">
+                    あなたのSNSは「フロントエンド（画面）」と「Supabase（バックエンド）」がインターネットを通じて対話することで動きます。
+                </p>
+            </div>
+
+            <!-- Architecture Flow Diagram (pure HTML/CSS) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center relative">
+                
+                <!-- Client Side -->
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-5 text-center relative shadow-sm">
+                    <div class="text-3xl mb-2">📱 / 💻</div>
+                    <span class="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded font-bold">フロントエンド</span>
+                    <h3 class="font-bold text-indigo-950 mt-1">ユーザーの画面 (Web)</h3>
+                    <p class="text-xs text-indigo-700 mt-2">GitHub Pages で無料公開<br>(HTML / CSS / JavaScript)</p>
+                    <div class="mt-3 text-xs bg-white text-indigo-900 py-1.5 px-3 rounded border border-indigo-100 font-medium">
+                        ボタン操作・画面の描画
+                    </div>
+                </div>
+
+                <!-- Connector -->
+                <div class="flex flex-col items-center justify-center py-2 md:py-0">
+                    <div class="hidden md:block h-1 w-full connector-line rounded my-2"></div>
+                    <div class="bg-slate-900 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-mono font-bold border border-slate-700 shadow">
+                        ⚡ API通信 (リアルタイムデータ送受信)
+                    </div>
+                    <div class="hidden md:block h-1 w-full connector-line rounded my-2"></div>
+                </div>
+
+                <!-- Supabase Cloud Side -->
+                <div class="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-5 text-center relative shadow-sm">
+                    <div class="text-3xl mb-2">⚡ 🗄️</div>
+                    <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded font-bold">バックエンド</span>
+                    <h3 class="font-bold text-emerald-950 mt-1">Supabase クラウド</h3>
+                    <p class="text-xs text-emerald-700 mt-2">データ管理 & 認証サーバー<br>(PostgreSQL データベース)</p>
+                    <div class="mt-3 grid grid-cols-2 gap-1 text-[11px] font-semibold text-emerald-900">
+                        <span class="bg-white p-1 rounded border border-emerald-100">🗄️ 投稿データ</span>
+                        <span class="bg-white p-1 rounded border border-emerald-100">🔒 会員管理</span>
+                        <span class="bg-white p-1 rounded border border-emerald-100">🖼️ 画像保存</span>
+                        <span class="bg-white p-1 rounded border border-emerald-100">📡 即時通知</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SECTION 2: ROADMAP MAP PHASES -->
+        <section class="space-y-6">
+            <div>
+                <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded-full">開発ステップ</span>
+                <h2 class="text-xl font-bold text-slate-900 mt-2">SNS完成までの6ステップ・ロードマップ</h2>
+                <p class="text-slate-600 text-sm mt-1">
+                    難易度順に1つずつステップを踏んで進めることで、途中で挫折せずに本格的なSNSを完成させることができます。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Phase 1 -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-slate-400">PHASE 01</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded">基礎デザイン</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">🎨</div>
+                            <h3 class="font-bold text-slate-900">見た目をつくる</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                            SNSの骨組みとなる画面デザインを作ります。まずは入力欄と投稿ボタン、ダミーのタイムラインを用意します。
+                        </p>
+                        <ul class="text-xs text-slate-700 space-y-2 border-t border-slate-100 pt-3">
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-500 font-bold">✓</span> HTMLでレイアウト枠を作成
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-500 font-bold">✓</span> Tailwind CSSでスタイリング
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-500 font-bold">✓</span> GitHub Pagesで公開・表示確認
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-500">
+                        <span>所要目安: 1〜2日</span>
+                        <span class="font-bold text-blue-600">難易度: ★☆☆☆☆</span>
+                    </div>
+                </div>
+
+                <!-- Phase 2 -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-slate-400">PHASE 02</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded">クラウド準備</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">⚡</div>
+                            <h3 class="font-bold text-slate-900">Supabase連携</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                            全員でデータを共有するための「クラウドデータベース」を開設し、アクセス許可を設定します。
+                        </p>
+                        <ul class="text-xs text-slate-700 space-y-2 border-t border-slate-100 pt-3">
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span> Supabase 無料アカウント作成
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span> `posts` (投稿表) テーブルの作成
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span> APIキーの取得と接続設定
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-500">
+                        <span>所要目安: 1日</span>
+                        <span class="font-bold text-emerald-600">難易度: ★★☆☆☆</span>
+                    </div>
+                </div>
+
+                <!-- Phase 3 -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-slate-400">PHASE 03</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-0.5 rounded">コア機能</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg">💬</div>
+                            <h3 class="font-bold text-slate-900">投稿 & 同期</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                            文字を打ち込んで投稿し、他人のスマホからも同時にタイムラインが見える「本物のSNS」にします。
+                        </p>
+                        <ul class="text-xs text-slate-700 space-y-2 border-t border-slate-100 pt-3">
+                            <li class="flex items-start gap-2">
+                                <span class="text-purple-500 font-bold">✓</span> データベースへの投稿書き込み
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-purple-500 font-bold">✓</span> タイムライン自動読み込み
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-purple-500 font-bold">✓</span> リアルタイム(自動更新)の設定
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-500">
+                        <span>所要目安: 2〜3日</span>
+                        <span class="font-bold text-purple-600">難易度: ★★☆☆☆</span>
+                    </div>
+                </div>
+
+                <!-- Phase 4 -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-slate-400">PHASE 04</span>
+                            <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded">セキュリティ</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg">🔑</div>
+                            <h3 class="font-bold text-slate-900">ユーザー登録・認証</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                            「誰が投稿したか」を正確に記録し、ログインした本人しか自分の投稿を削除できないように保護します。
+                        </p>
+                        <ul class="text-xs text-slate-700 space-y-2 border-t border-slate-100 pt-3">
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-500 font-bold">✓</span> Supabase Auth (会員登録/ログイン)
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-500 font-bold">✓</span> ユーザープロフィールの作成
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-500 font-bold">✓</span> RLS (セキュリティ保護) の適用
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-500">
+                        <span>所要目安: 3〜5日</span>
+                        <span class="font-bold text-amber-600">難易度: ★★★☆☆</span>
+                    </div>
+                </div>
+
+                <!-- Phase 5 -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-slate-400">PHASE 05</span>
+                            <span class="bg-rose-100 text-rose-700 text-xs font-bold px-2 py-0.5 rounded">応用機能</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-lg">🖼️</div>
+                            <h3 class="font-bold text-slate-900">画像投稿 & いいね</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                            写真のアップロード機能や「いいねボタン」「コメント機能」を追加し、SNSらしいインタラクションを高めます。
+                        </p>
+                        <ul class="text-xs text-slate-700 space-y-2 border-t border-slate-100 pt-3">
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-500 font-bold">✓</span> Supabase Storage (画像ストレージ)
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-500 font-bold">✓</span> いいね機能 (`likes` テーブル)
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-rose-500 font-bold">✓</span> リプライ・返信スレッド機能
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-500">
+                        <span>所要目安: 4〜7日</span>
+                        <span class="font-bold text-rose-600">難易度: ★★★★☆</span>
+                    </div>
+                </div>
+
+                <!-- Phase 6 -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-slate-400">PHASE 06</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded">仕上げ</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">🚀</div>
+                            <h3 class="font-bold text-slate-900">洗練 & 正式リリース</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                            スマホ表示の最適化、OGP（SNS共有時のカード画像）の設定を行い、友人や世界にアプリをアピールします。
+                        </p>
+                        <ul class="text-xs text-slate-700 space-y-2 border-t border-slate-100 pt-3">
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span> スマホ完全対応 (レスポンシブUI)
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span> OGPタグ・アイコン（Favicon）設定
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span> 友達やSNSでの公開とフィードバック
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-500">
+                        <span>所要目安: 2〜3日</span>
+                        <span class="font-bold text-indigo-600">難易度: ★★☆☆☆</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- SECTION 3: SUPABASE FEATURE MATRIX -->
+        <section class="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-lg">
+            <div class="mb-6">
+                <span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/30">Supabaseの強み</span>
+                <h2 class="text-xl font-bold text-white mt-2">なぜSupabaseで自作SNSを作るのか？</h2>
+                <p class="text-slate-400 text-sm mt-1">従来は複雑なバックエンドサーバーの構築が必要でしたが、Supabaseの4つの主要機能がすべて解決します。</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div class="text-2xl mb-1">🗄️ Database</div>
+                    <h3 class="font-bold text-emerald-400 text-sm">Postgres データベース</h3>
+                    <p class="text-slate-400 text-xs mt-1">投稿文やユーザー名、投稿日時を高速かつ安全に保管します。</p>
+                </div>
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div class="text-2xl mb-1">🔐 Auth</div>
+                    <h3 class="font-bold text-emerald-400 text-sm">ユーザー認証</h3>
+                    <p class="text-slate-400 text-xs mt-1">メールパスワード認証やGitHubログインなどを簡単に導入可能。</p>
+                </div>
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div class="text-2xl mb-1">🖼️ Storage</div>
+                    <h3 class="font-bold text-emerald-400 text-sm">ファイル保存</h3>
+                    <p class="text-slate-400 text-xs mt-1">アイコン画像や投稿写真をアップロードして配信するサーバー。</p>
+                </div>
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div class="text-2xl mb-1">📡 Realtime</div>
+                    <h3 class="font-bold text-emerald-400 text-sm">リアルタイム配信</h3>
+                    <p class="text-slate-400 text-xs mt-1">リロードしなくても、他人の新投稿が画面にすぐ自動で出ます。</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SECTION 4: INTERACTIVE PROGRESS TRACKER -->
+        <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                
+                <div class="md:col-span-2 space-y-4">
+                    <div>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded-full">インタラクティブ</span>
+                        <h2 class="text-xl font-bold text-slate-900 mt-2">あなたの進捗をチェックしよう</h2>
+                        <p class="text-slate-600 text-sm mt-1">完了したタスクにチェックを入れて、自分の開発状況を可視化できます。</p>
+                    </div>
+
+                    <div class="space-y-2 max-h-80 overflow-y-auto pr-2" id="checklist">
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 1] HTML/Tailwindで静的な画面UIを作成した</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 1] GitHub PagesでWebページを公開した</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 2] Supabaseでプロジェクトを作成し`posts`テーブルを作った</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 2] RLSアクセス権限を設定しAPIキーを取得した</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 3] 投稿のデータベース保存と読み込みを実装した</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 4] Supabase Authでログイン・ユーザー認証を組み込んだ</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 5] Supabase Storageで画像投稿機能を追加した</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-slate-200">
+                            <input type="checkbox" class="task-check w-4 h-4 text-emerald-600 rounded" onchange="updateProgress()" />
+                            <span class="text-xs font-medium text-slate-700">[Phase 6] OGP設定とレスポンシブ対応を整えて正式公開した</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Progress Doughnut Chart -->
+                <div class="flex flex-col items-center justify-center bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                    <div class="text-center mt-3">
+                        <p id="statusMessage" class="text-xs font-bold text-slate-600">タスクにチェックを入れてみましょう！</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-400 py-8">
+        GitHub × Supabase SNS Roadmap • Open Interactive Visual Guide
+    </footer>
+
+    <!-- Interactive Script -->
+    <script>
+        let chartInstance = null;
+
+        function initChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['完了', '未達成'],
+                    datasets: [{
+                        data: [0, 8],
+                        backgroundColor: ['#10b981', '#e2e8f0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('.task-check');
+            const total = checkboxes.length;
+            let completed = 0;
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) completed++;
+            });
+
+            const percent = Math.round((completed / total) * 100);
+
+            // Update UI elements
+            document.getElementById('progressPercent').innerText = percent + '%';
+            document.getElementById('progressBar').style.width = percent + '%';
+
+            // Update Chart
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = [completed, total - completed];
+                chartInstance.update();
+            }
+
+            // Update Message
+            const msgEl = document.getElementById('statusMessage');
+            if (percent === 0) {
+                msgEl.innerText = "まずはPhase 1からスタート！";
+                msgEl.className = "text-xs font-bold text-slate-600";
+            } else if (percent < 50) {
+                msgEl.innerText = "順調な滑り出しです！一歩ずつ進めましょう。";
+                msgEl.className = "text-xs font-bold text-indigo-600";
+            } else if (percent < 100) {
+                msgEl.innerText = "折り返し地点！本格SNS完成まであと少し。";
+                msgEl.className = "text-xs font-bold text-emerald-600";
+            } else {
+                msgEl.innerText = "🎉 ロードマップ達成！自作SNSが完成しました！";
+                msgEl.className = "text-xs font-bold text-purple-600 animate-bounce";
+            }
+        }
+
+        window.onload = function() {
+            initChart();
+            updateProgress();
+        };
+    </script>
+</body>
+</html>
