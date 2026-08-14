@@ -6,31 +6,48 @@
     <title>MySNS - 自作SNSプロジェクト</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
     <!-- ヘッダー -->
     <header class="bg-white shadow sticky top-0 z-10">
         <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-blue-600">MySNS</h1>
-            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">LocalStorage動作中</span>
+            <h1 class="text-xl font-bold text-purple-600">MySNS</h1>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Supabase DB連携中</span>
         </div>
     </header>
 
     <!-- メインコンテンツ -->
     <main class="max-w-2xl mx-auto px-4 py-6">
 
+        <!-- 設定注意書き（未設定時のみ表示） -->
+        <div id="configWarning" class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded text-sm text-amber-800 hidden">
+            <strong>⚠️ Supabaseの設定が必要です：</strong><br>
+            JavaScriptコード内の <code>SUPABASE_URL</code> と <code>SUPABASE_ANON_KEY</code> をご自身のSupabaseプロジェクトの情報に書き換えてください。
+        </div>
+
         <!-- 投稿入力エリア -->
         <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="mb-3">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="お名前（例: タロウ）" 
+                    class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    value="名無しさん"
+                />
+            </div>
             <textarea 
                 id="postInput"
-                class="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                class="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" 
                 rows="3" 
-                placeholder="いま何してる？"></textarea>
+                placeholder="いま何してる？（世界中のユーザーに共有されます）"></textarea>
             <div class="flex justify-end mt-2">
                 <button 
                     id="postBtn"
-                    class="bg-blue-500 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-blue-600 transition">
+                    class="bg-purple-600 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-purple-700 transition">
                     投稿する
                 </button>
             </div>
@@ -38,48 +55,75 @@
 
         <!-- タイムライン (投稿一覧) -->
         <div id="timeline" class="space-y-4">
-            <!-- JavaScriptでここに投稿カードが挿入されます -->
+            <div class="text-center text-gray-400 text-sm py-8">投稿を読み込んでいます...</div>
         </div>
 
     </main>
 
     <!-- JavaScript 処理 -->
     <script>
+        // ------------------------------------------------------------------
+        // 【要設定】Supabaseの設定画面から取得したURLとANON KEYを設定してください
+        // ------------------------------------------------------------------
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+        // Supabaseクライアントの初期化
+        let supabaseClient = null;
+        if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            document.getElementById('configWarning').classList.remove('hidden');
+        }
+
         const postBtn = document.getElementById('postBtn');
         const postInput = document.getElementById('postInput');
+        const userInput = document.getElementById('userInput');
         const timeline = document.getElementById('timeline');
 
-        // ローカルストレージから投稿を取得（データがなければ空配列）
-        let posts = JSON.parse(localStorage.getItem('my_sns_posts')) || [
-            {
-                id: Date.now(),
-                user: '開発者ユーザー',
-                content: '自作SNSの開発をスタートしました！LocalStorage対応版です。',
-                createdAt: new Date().toLocaleString('ja-JP')
+        // Supabaseから投稿データを取得して画面描画する関数
+        async function fetchPosts() {
+            if (!supabaseClient) {
+                timeline.innerHTML = '<p class="text-center text-gray-500 text-sm py-4">Supabaseキーを設定するとタイムラインが表示されます。</p>';
+                return;
             }
-        ];
 
-        // 画面に投稿一覧を描画する関数
-        function renderPosts() {
-            timeline.innerHTML = ''; // 一旦クリア
+            const { data: posts, error } = await supabaseClient
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-            if (posts.length === 0) {
-                timeline.innerHTML = '<p class="text-center text-gray-500 text-sm">投稿がまだありません。</p>';
+            if (error) {
+                console.error('取得エラー:', error);
+                timeline.innerHTML = `<p class="text-center text-red-500 text-sm py-4">取得エラー: ${error.message}</p>`;
+                return;
+            }
+
+            renderPosts(posts);
+        }
+
+        // 画面に投稿一覧を表示する関数
+        function renderPosts(posts) {
+            timeline.innerHTML = '';
+
+            if (!posts || posts.length === 0) {
+                timeline.innerHTML = '<p class="text-center text-gray-500 text-sm py-4">投稿がまだありません。最初の投稿をしてみましょう！</p>';
                 return;
             }
 
             posts.forEach(post => {
+                const dateStr = new Date(post.created_at).toLocaleString('ja-JP');
                 const postEl = document.createElement('div');
                 postEl.className = 'bg-white p-4 rounded-lg shadow relative group';
                 postEl.innerHTML = `
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                                ${post.user.charAt(0)}
+                            <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                ${(post.user_name || '無').charAt(0)}
                             </div>
                             <div>
-                                <div class="font-bold text-gray-800 text-sm">${post.user}</div>
-                                <div class="text-xs text-gray-500">${post.createdAt}</div>
+                                <div class="font-bold text-gray-800 text-sm">${escapeHtml(post.user_name || '名無しさん')}</div>
+                                <div class="text-xs text-gray-400">${dateStr}</div>
                             </div>
                         </div>
                         <button 
@@ -94,7 +138,7 @@
             });
         }
 
-        // XSS対策のためのエスケープ関数
+        // XSS対策用エスケープ
         function escapeHtml(str) {
             return str
                 .replace(/&/g, "&")
@@ -105,42 +149,56 @@
         }
 
         // 新規投稿処理
-        postBtn.addEventListener('click', () => {
+        postBtn.addEventListener('click', async () => {
             const content = postInput.value.trim();
+            const user_name = userInput.value.trim() || '名無しさん';
+
             if (!content) return;
 
-            const newPost = {
-                id: Date.now(),
-                user: 'あなた',
-                content: content,
-                createdAt: new Date().toLocaleString('ja-JP')
-            };
+            if (!supabaseClient) {
+                alert('Supabaseの接続情報を設定してください。');
+                return;
+            }
 
-            // 配列の先頭に追加
-            posts.unshift(newPost);
+            postBtn.disabled = true;
+            postBtn.innerText = '送信中...';
 
-            // LocalStorageに保存
-            savePosts();
+            // Supabaseのpostsテーブルへ挿入
+            const { error } = await supabaseClient
+                .from('posts')
+                .insert([{ user_name, content }]);
 
-            // 画面更新と入力欄初期化
-            renderPosts();
-            postInput.value = '';
+            postBtn.disabled = false;
+            postBtn.innerText = '投稿する';
+
+            if (error) {
+                alert('投稿に失敗しました: ' + error.message);
+                console.error(error);
+            } else {
+                postInput.value = '';
+                fetchPosts(); // 投稿後に再読み込み
+            }
         });
 
         // 投稿削除処理
-        function deletePost(id) {
-            posts = posts.filter(post => post.id !== id);
-            savePosts();
-            renderPosts();
+        async function deletePost(id) {
+            if (!supabaseClient) return;
+            if (!confirm('本当にこの投稿を削除しますか？')) return;
+
+            const { error } = await supabaseClient
+                .from('posts')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert('削除に失敗しました: ' + error.message);
+            } else {
+                fetchPosts();
+            }
         }
 
-        // LocalStorageへの保存共通処理
-        function savePosts() {
-            localStorage.setItem('my_sns_posts', JSON.stringify(posts));
-        }
-
-        // 初期表示
-        renderPosts();
+        // 初期表示時に投稿一覧を取得
+        fetchPosts();
     </script>
 </body>
 </html>
