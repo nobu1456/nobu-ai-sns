@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MySNS - 自作SNSプロジェクト</title>
-    <!-- Tailwind CSS (デザイン調整用ライブラリ) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -13,9 +13,7 @@
     <header class="bg-white shadow sticky top-0 z-10">
         <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
             <h1 class="text-xl font-bold text-blue-600">MySNS</h1>
-            <button class="bg-blue-500 text-white px-4 py-1.5 rounded-full text-sm hover:bg-blue-600">
-                ログイン
-            </button>
+            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">LocalStorage動作中</span>
         </div>
     </header>
 
@@ -32,7 +30,7 @@
             <div class="flex justify-end mt-2">
                 <button 
                     id="postBtn"
-                    class="bg-blue-500 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-blue-600">
+                    class="bg-blue-500 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-blue-600 transition">
                     投稿する
                 </button>
             </div>
@@ -40,76 +38,109 @@
 
         <!-- タイムライン (投稿一覧) -->
         <div id="timeline" class="space-y-4">
-            
-            <!-- サンプル投稿 1 -->
-            <div class="bg-white p-4 rounded-lg shadow">
-                <div class="flex items-center space-x-3 mb-2">
-                    <div class="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold">
-                        U
-                    </div>
-                    <div>
-                        <div class="font-bold text-gray-800 text-sm">開発者ユーザー</div>
-                        <div class="text-xs text-gray-500">たった今</div>
-                    </div>
-                </div>
-                <p class="text-gray-700 text-sm">
-                    自作SNSの開発をスタートしました！まずはHTMLとCSSで画面の骨組みを作成中です。
-                </p>
-            </div>
-
-            <!-- サンプル投稿 2 -->
-            <div class="bg-white p-4 rounded-lg shadow">
-                <div class="flex items-center space-x-3 mb-2">
-                    <div class="w-10 h-10 bg-green-400 rounded-full flex items-center justify-center text-white font-bold">
-                        G
-                    </div>
-                    <div>
-                        <div class="font-bold text-gray-800 text-sm">ゲスト</div>
-                        <div class="text-xs text-gray-500">1時間前</div>
-                    </div>
-                </div>
-                <p class="text-gray-700 text-sm">
-                    ここにみんなの投稿が並ぶ予定です。
-                </p>
-            </div>
-
+            <!-- JavaScriptでここに投稿カードが挿入されます -->
         </div>
 
     </main>
 
-    <!-- 簡単な JavaScript 処理（動作テスト用） -->
+    <!-- JavaScript 処理 -->
     <script>
         const postBtn = document.getElementById('postBtn');
         const postInput = document.getElementById('postInput');
         const timeline = document.getElementById('timeline');
 
-        // 投稿ボタンクリック時の処理
+        // ローカルストレージから投稿を取得（データがなければ空配列）
+        let posts = JSON.parse(localStorage.getItem('my_sns_posts')) || [
+            {
+                id: Date.now(),
+                user: '開発者ユーザー',
+                content: '自作SNSの開発をスタートしました！LocalStorage対応版です。',
+                createdAt: new Date().toLocaleString('ja-JP')
+            }
+        ];
+
+        // 画面に投稿一覧を描画する関数
+        function renderPosts() {
+            timeline.innerHTML = ''; // 一旦クリア
+
+            if (posts.length === 0) {
+                timeline.innerHTML = '<p class="text-center text-gray-500 text-sm">投稿がまだありません。</p>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const postEl = document.createElement('div');
+                postEl.className = 'bg-white p-4 rounded-lg shadow relative group';
+                postEl.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                ${post.user.charAt(0)}
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-800 text-sm">${post.user}</div>
+                                <div class="text-xs text-gray-500">${post.createdAt}</div>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="deletePost(${post.id})" 
+                            class="text-xs text-red-400 hover:text-red-600 opacity-80 hover:opacity-100">
+                            削除
+                        </button>
+                    </div>
+                    <p class="text-gray-700 text-sm whitespace-pre-wrap">${escapeHtml(post.content)}</p>
+                `;
+                timeline.appendChild(postEl);
+            });
+        }
+
+        // XSS対策のためのエスケープ関数
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&")
+                .replace(/</g, "<")
+                .replace(/>/g, ">")
+                .replace(/"/g, """)
+                .replace(/'/g, "'");
+        }
+
+        // 新規投稿処理
         postBtn.addEventListener('click', () => {
             const content = postInput.value.trim();
             if (!content) return;
 
-            // 新しい投稿要素を作成
-            const newPost = document.createElement('div');
-            newPost.className = 'bg-white p-4 rounded-lg shadow';
-            newPost.innerHTML = `
-                <div class="flex items-center space-x-3 mb-2">
-                    <div class="w-10 h-10 bg-purple-400 rounded-full flex items-center justify-center text-white font-bold">
-                        You
-                    </div>
-                    <div>
-                        <div class="font-bold text-gray-800 text-sm">あなた</div>
-                        <div class="text-xs text-gray-500">たった今</div>
-                    </div>
-                </div>
-                <p class="text-gray-700 text-sm">${content}</p>
-            `;
+            const newPost = {
+                id: Date.now(),
+                user: 'あなた',
+                content: content,
+                createdAt: new Date().toLocaleString('ja-JP')
+            };
 
-            // タイムラインの先頭に追加
-            timeline.prepend(newPost);
+            // 配列の先頭に追加
+            posts.unshift(newPost);
 
-            // 入力欄をクリア
+            // LocalStorageに保存
+            savePosts();
+
+            // 画面更新と入力欄初期化
+            renderPosts();
             postInput.value = '';
         });
+
+        // 投稿削除処理
+        function deletePost(id) {
+            posts = posts.filter(post => post.id !== id);
+            savePosts();
+            renderPosts();
+        }
+
+        // LocalStorageへの保存共通処理
+        function savePosts() {
+            localStorage.setItem('my_sns_posts', JSON.stringify(posts));
+        }
+
+        // 初期表示
+        renderPosts();
     </script>
 </body>
 </html>
