@@ -3,75 +3,390 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MySNS - 自作SNSプロジェクト</title>
+    <title>MySNS - モダンクラウド型自作SNS</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-gray-100 min-h-screen">
 
-    <!-- ヘッダー -->
-    <header class="bg-white shadow sticky top-0 z-10">
-        <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-purple-600">MySNS</h1>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Supabase DB連携中</span>
+    <!-- Chosen Palette: Indigo & Slate Modern Minimalist -->
+    <!-- Application Structure Plan: 
+         - Top Navigation & Brand Bar with search input and live status indicators.
+         - Desktop 3-Column Layout: Left Navigation Sidebar, Center Main Feed, Right Widgets & Supabase Status Panel.
+         - Mobile Bottom Navigation Bar for easy one-handed operation on handheld devices.
+         - Rich Post Creator: Name input, content area, live character counter, quick action buttons.
+         - Dynamic Interactive Timeline: Search/Filter bar, like toggles, formatted timestamps, XSS escaping, and Supabase database synchronization.
+    -->
+    <!-- Visualization & Content Choices:
+         - Layout: Responsive Grid & Flexbox with Tailwind CSS.
+         - Icons & Indicators: Unicode visual glyphs and CSS badges (NO SVG, NO Mermaid JS used).
+         - UI Patterns: Modern social media design with soft borders, hover effects, card elevation, and clear contrast ratios.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Top Sticky Header for Mobile & Tablet -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 sm:hidden">
+        <div class="px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
+                    S
+                </div>
+                <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">MySNS</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="mobileStatusBadge" class="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    未設定
+                </span>
+            </div>
         </div>
     </header>
 
-    <!-- メインコンテンツ -->
-    <main class="max-w-2xl mx-auto px-4 py-6">
+    <!-- Main Container Layout -->
+    <div class="max-w-7xl mx-auto w-full px-0 sm:px-4 md:px-6 flex-1 flex justify-center gap-6">
 
-        <!-- 設定注意書き（未設定時のみ表示） -->
-        <div id="configWarning" class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded text-sm text-amber-800 hidden">
-            <strong>⚠️ Supabaseの設定が必要です：</strong><br>
-            JavaScriptコード内の <code>SUPABASE_URL</code> と <code>SUPABASE_ANON_KEY</code> をご自身のSupabaseプロジェクトの情報に書き換えてください。
-        </div>
+        <!-- Left Sidebar Navigation (Desktop) -->
+        <aside class="hidden sm:flex flex-col w-20 lg:w-64 py-6 sticky top-0 h-screen justify-between border-r sm:border-r-0 border-slate-200">
+            <div class="space-y-6">
+                <!-- Brand Logo -->
+                <div class="px-3 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+                        S
+                    </div>
+                    <div class="hidden lg:block">
+                        <h1 class="font-extrabold text-xl tracking-tight text-slate-900">MySNS</h1>
+                        <p class="text-[11px] text-slate-400 font-medium">Cloud Social Network</p>
+                    </div>
+                </div>
 
-        <!-- 投稿入力エリア -->
-        <div class="bg-white p-4 rounded-lg shadow mb-6">
-            <div class="mb-3">
-                <input 
-                    type="text" 
-                    id="userInput" 
-                    placeholder="お名前（例: タロウ）" 
-                    class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    value="名無しさん"
-                />
+                <!-- Nav Menu Links -->
+                <nav class="space-y-1">
+                    <a href="#" class="flex items-center gap-4 px-3 py-3 text-slate-900 bg-indigo-50 font-bold rounded-2xl text-base transition">
+                        <span class="text-xl">🏠</span>
+                        <span class="hidden lg:inline">ホーム</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-4 px-3 py-3 text-slate-600 hover:bg-slate-100 font-semibold rounded-2xl text-base transition">
+                        <span class="text-xl">🔍</span>
+                        <span class="hidden lg:inline">話題を検索</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-4 px-3 py-3 text-slate-600 hover:bg-slate-100 font-semibold rounded-2xl text-base transition">
+                        <span class="text-xl">🔔</span>
+                        <span class="hidden lg:inline">通知</span>
+                        <span class="hidden lg:inline-block ml-auto bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-4 px-3 py-3 text-slate-600 hover:bg-slate-100 font-semibold rounded-2xl text-base transition">
+                        <span class="text-xl">✉️</span>
+                        <span class="hidden lg:inline">メッセージ</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-4 px-3 py-3 text-slate-600 hover:bg-slate-100 font-semibold rounded-2xl text-base transition">
+                        <span class="text-xl">👤</span>
+                        <span class="hidden lg:inline">プロフィール</span>
+                    </a>
+                </nav>
             </div>
-            <textarea 
-                id="postInput"
-                class="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" 
-                rows="3" 
-                placeholder="いま何してる？（世界中のユーザーに共有されます）"></textarea>
-            <div class="flex justify-end mt-2">
-                <button 
-                    id="postBtn"
-                    class="bg-purple-600 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-purple-700 transition">
-                    投稿する
-                </button>
+
+            <!-- Current Profile Snippet -->
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div id="sidebarUserAvatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-base flex-shrink-0">
+                    名
+                </div>
+                <div class="hidden lg:block overflow-hidden">
+                    <div id="sidebarUserName" class="font-bold text-sm text-slate-900 truncate">名無しさん</div>
+                    <div class="text-xs text-slate-400 truncate">@user_local</div>
+                </div>
             </div>
+        </aside>
+
+        <!-- Center Feed (Main Timeline) -->
+        <main class="w-full max-w-2xl bg-white min-h-screen border-x border-slate-200 flex flex-col pb-20 sm:pb-8">
+
+            <!-- Desktop Header / Tabs -->
+            <div class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20 px-4 py-3">
+                <div class="flex items-center justify-between mb-2 hidden sm:flex">
+                    <h2 class="font-extrabold text-lg text-slate-900">ホーム</h2>
+                    <button onclick="fetchPosts()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                        <span>🔄</span> 最新状態に更新
+                    </button>
+                </div>
+
+                <!-- Feed Tabs -->
+                <div class="flex border-b border-slate-100 text-sm font-bold text-slate-500">
+                    <button class="flex-1 py-2.5 text-center text-indigo-600 border-b-2 border-indigo-600">おすすめ</button>
+                    <button class="flex-1 py-2.5 text-center hover:text-slate-800">フォロー中</button>
+                    <button class="flex-1 py-2.5 text-center hover:text-slate-800">メディア</button>
+                </div>
+            </div>
+
+            <div class="p-4 space-y-5">
+
+                <!-- Warning Banner if Supabase Credentials are Missing -->
+                <div id="configWarning" class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 shadow-sm hidden">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">⚠️</span>
+                        <div class="text-xs text-amber-900 leading-relaxed">
+                            <strong class="font-bold text-amber-950 text-sm block mb-0.5">Supabase設定が必要です</strong>
+                            JavaScriptコード内の <code class="bg-amber-100/80 px-1.5 py-0.5 rounded text-amber-900 font-mono">SUPABASE_URL</code> と <code class="bg-amber-100/80 px-1.5 py-0.5 rounded text-amber-900 font-mono">SUPABASE_ANON_KEY</code> をご自身のプロジェクト情報に書き換えてください。現在デモ/確認モードで動作しています。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rich Post Creator Card -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                    <!-- User Profile & Name Input Row -->
+                    <div class="flex items-center gap-3">
+                        <div id="creatorAvatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-base flex-shrink-0 shadow-sm">
+                            名
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">投稿者名</label>
+                            <input 
+                                type="text" 
+                                id="userInput" 
+                                placeholder="あなたのお名前" 
+                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                value="名無しさん"
+                                oninput="updateUserAvatar()"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Post Text Area -->
+                    <div>
+                        <textarea 
+                            id="postInput"
+                            rows="3" 
+                            maxlength="280"
+                            placeholder="いま何してる？（世界中のユーザーとリアルタイム共有）"
+                            class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-none custom-scrollbar"
+                            oninput="updateCharCount()"
+                        ></textarea>
+                    </div>
+
+                    <!-- Toolbar & Action Row -->
+                    <div class="flex items-center justify-between pt-1">
+                        <div class="flex items-center gap-2 text-slate-400 text-lg">
+                            <button title="画像添付" class="p-1.5 hover:bg-slate-200 rounded-lg transition text-slate-500">🖼️</button>
+                            <button title="絵文字" class="p-1.5 hover:bg-slate-200 rounded-lg transition text-slate-500">😊</button>
+                            <button title="アンケート" class="p-1.5 hover:bg-slate-200 rounded-lg transition text-slate-500">📊</button>
+                            <button title="位置情報" class="p-1.5 hover:bg-slate-200 rounded-lg transition text-slate-500">📍</button>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <span id="charCount" class="text-xs font-mono font-medium text-slate-400">0 / 280</span>
+                            <button 
+                                id="postBtn"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-5 py-2 rounded-xl shadow-md hover:shadow-lg active:scale-95 transition flex items-center gap-1.5">
+                                <span>投稿する</span>
+                                <span class="text-xs">✨</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Search Filter & Controls -->
+                <div class="flex items-center justify-between gap-3 pt-2">
+                    <div class="relative flex-1">
+                        <span class="absolute left-3 top-2.5 text-slate-400 text-sm">🔍</span>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="キーワードでタイムラインを検索..." 
+                            class="w-full bg-slate-100 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                            oninput="filterPosts()"
+                        />
+                    </div>
+                    <div class="text-xs text-slate-500 font-semibold whitespace-nowrap">
+                        全 <span id="postCountBadge" class="text-indigo-600 font-bold">0</span> 件
+                    </div>
+                </div>
+
+                <!-- Feed Posts Container -->
+                <div id="timeline" class="space-y-4">
+                    <div class="text-center text-slate-400 text-sm py-12 space-y-3">
+                        <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p>Supabaseから投稿データを取得中...</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Right Sidebar Widgets (Desktop) -->
+        <aside class="hidden lg:block w-80 py-6 sticky top-0 h-screen space-y-6 overflow-y-auto custom-scrollbar">
+            
+            <!-- Connection Status Widget -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">システム接続状態</span>
+                    <span id="desktopStatusBadge" class="inline-flex items-center gap-1.5 text-xs font-bold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        未接続
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Supabase PostgreSQL データベースと接続し、リアルタイムでの投稿共有を行なっています。
+                </p>
+            </div>
+
+            <!-- Trending Widget -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center justify-between">
+                    <span>🔥 トレンドキーワード</span>
+                    <span class="text-[11px] text-slate-400 font-normal">日本</span>
+                </h3>
+                <div class="space-y-2 text-xs">
+                    <div class="p-2 hover:bg-slate-50 rounded-xl transition cursor-pointer">
+                        <div class="text-slate-400 text-[10px]">自作Web開発・トレンド</div>
+                        <div class="font-bold text-slate-800">#SupabaseSNS</div>
+                        <div class="text-slate-400 text-[10px] mt-0.5">1,240 件の投稿</div>
+                    </div>
+                    <div class="p-2 hover:bg-slate-50 rounded-xl transition cursor-pointer">
+                        <div class="text-slate-400 text-[10px]">プログラミング</div>
+                        <div class="font-bold text-slate-800">#GitHubPages</div>
+                        <div class="text-slate-400 text-[10px] mt-0.5">856 件の投稿</div>
+                    </div>
+                    <div class="p-2 hover:bg-slate-50 rounded-xl transition cursor-pointer">
+                        <div class="text-slate-400 text-[10px]">フロントエンド</div>
+                        <div class="font-bold text-slate-800">#TailwindCSS</div>
+                        <div class="text-slate-400 text-[10px] mt-0.5">3,410 件の投稿</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggested Users Widget -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                <h3 class="font-bold text-slate-900 text-sm">おすすめのユーザー</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">
+                                Sup
+                            </div>
+                            <div>
+                                <div class="font-bold text-xs text-slate-800">Supabase 公式</div>
+                                <div class="text-[10px] text-slate-400">@supabase</div>
+                            </div>
+                        </div>
+                        <button class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3 py-1 rounded-full transition">
+                            フォロー
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-xs flex items-center justify-center">
+                                Git
+                            </div>
+                            <div>
+                                <div class="font-bold text-xs text-slate-800">GitHub Community</div>
+                                <div class="text-[10px] text-slate-400">@github</div>
+                            </div>
+                        </div>
+                        <button class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3 py-1 rounded-full transition">
+                            フォロー
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-[11px] text-slate-400 px-2 space-x-2">
+                <a href="#" class="hover:underline">利用規約</a>
+                <span>•</span>
+                <a href="#" class="hover:underline">プライバシー</a>
+                <span>•</span>
+                <a href="#" class="hover:underline">ヘルプ</a>
+                <span>© 2026 MySNS App</span>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Mobile Fixed Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 sm:hidden z-30">
+        <div class="flex justify-around items-center py-2 text-slate-600">
+            <a href="#" class="flex flex-col items-center gap-0.5 text-indigo-600">
+                <span class="text-xl">🏠</span>
+                <span class="text-[10px] font-bold">ホーム</span>
+            </a>
+            <a href="#" class="flex flex-col items-center gap-0.5 hover:text-indigo-600">
+                <span class="text-xl">🔍</span>
+                <span class="text-[10px] font-bold">検索</span>
+            </a>
+            <a href="#" class="flex flex-col items-center gap-0.5 hover:text-indigo-600 relative">
+                <span class="text-xl">🔔</span>
+                <span class="text-[10px] font-bold">通知</span>
+                <span class="absolute top-0 right-2 w-2 h-2 bg-indigo-600 rounded-full"></span>
+            </a>
+            <a href="#" class="flex flex-col items-center gap-0.5 hover:text-indigo-600">
+                <span class="text-xl">✉️</span>
+                <span class="text-[10px] font-bold">メッセージ</span>
+            </a>
+            <a href="#" class="flex flex-col items-center gap-0.5 hover:text-indigo-600">
+                <span class="text-xl">👤</span>
+                <span class="text-[10px] font-bold">マイページ</span>
+            </a>
         </div>
+    </nav>
 
-        <!-- タイムライン (投稿一覧) -->
-        <div id="timeline" class="space-y-4">
-            <div class="text-center text-gray-400 text-sm py-8">投稿を読み込んでいます...</div>
-        </div>
-
-    </main>
-
-    <!-- JavaScript 処理 -->
+    <!-- Core JavaScript Logic & Supabase Integration -->
     <script>
-        // ------------------------------------------------------------------
-        // 【要設定】Supabaseの設定画面から取得したURLとANON KEYを設定してください
-        // ------------------------------------------------------------------
+        // Supabase API Credentials Placeholder
         const SUPABASE_URL = 'YOUR_SUPABASE_URL';
         const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-        // Supabaseクライアントの初期化
         let supabaseClient = null;
+        let allPosts = [];
+        let likeState = {};
+
+        // Color palette generator for user avatars
+        const avatarColors = [
+            'bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 
+            'bg-rose-600', 'bg-amber-600', 'bg-sky-600', 'bg-violet-600'
+        ];
+
+        function getAvatarColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % avatarColors.length;
+            return avatarColors[index];
+        }
+
+        // Initialize Supabase Connection
         if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            try {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                const connectedBadge = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 接続中 (Supabase DB)';
+                const mobileConnectedBadge = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> DB接続完了';
+                
+                document.getElementById('desktopStatusBadge').innerHTML = connectedBadge;
+                document.getElementById('desktopStatusBadge').className = 'inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200';
+                
+                document.getElementById('mobileStatusBadge').innerHTML = mobileConnectedBadge;
+                document.getElementById('mobileStatusBadge').className = 'inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200';
+            } catch (err) {
+                console.error("Supabase init error:", err);
+            }
         } else {
             document.getElementById('configWarning').classList.remove('hidden');
         }
@@ -81,12 +396,65 @@
         const userInput = document.getElementById('userInput');
         const timeline = document.getElementById('timeline');
 
-        // Supabaseから投稿データを取得して画面描画する関数
+        // Update User Avatar and Sidebar Labels dynamically
+        function updateUserAvatar() {
+            const name = userInput.value.trim() || '名無しさん';
+            const initial = name.charAt(0);
+            const colorClass = getAvatarColor(name);
+
+            const creatorAvatar = document.getElementById('creatorAvatar');
+            creatorAvatar.innerText = initial;
+            creatorAvatar.className = `w-10 h-10 rounded-full ${colorClass} text-white font-bold flex items-center justify-center text-base flex-shrink-0 shadow-sm`;
+
+            const sidebarAvatar = document.getElementById('sidebarUserAvatar');
+            if (sidebarAvatar) {
+                sidebarAvatar.innerText = initial;
+                sidebarAvatar.className = `w-10 h-10 rounded-full ${colorClass} text-white flex items-center justify-center font-bold text-base flex-shrink-0`;
+            }
+
+            const sidebarName = document.getElementById('sidebarUserName');
+            if (sidebarName) {
+                sidebarName.innerText = name;
+            }
+        }
+
+        // Live Character Limit Gauge
+        function updateCharCount() {
+            const count = postInput.value.length;
+            const charCountEl = document.getElementById('charCount');
+            charCountEl.innerText = `${count} / 280`;
+
+            if (count > 250) {
+                charCountEl.className = 'text-xs font-mono font-bold text-rose-500';
+            } else if (count > 200) {
+                charCountEl.className = 'text-xs font-mono font-medium text-amber-500';
+            } else {
+                charCountEl.className = 'text-xs font-mono font-medium text-slate-400';
+            }
+        }
+
+        // Fetch Posts from Supabase
         async function fetchPosts() {
             if (!supabaseClient) {
-                timeline.innerHTML = '<p class="text-center text-gray-500 text-sm py-4">Supabaseキーを設定するとタイムラインが表示されます。</p>';
+                // Fallback mock posts for immediate design preview
+                allPosts = [
+                    {
+                        id: 999,
+                        user_name: "Web開発スターター",
+                        content: "MySNSへようこそ！SupabaseのURLとANON KEYを設定すると、この画面から世界中へリアルタイムで投稿できます 🚀✨",
+                        created_at: new Date().toISOString()
+                    }
+                ];
+                renderPosts(allPosts);
                 return;
             }
+
+            timeline.innerHTML = `
+                <div class="text-center text-slate-400 text-sm py-12 space-y-3">
+                    <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p>最新のタイムラインを更新中...</p>
+                </div>
+            `;
 
             const { data: posts, error } = await supabaseClient
                 .from('posts')
@@ -95,94 +463,175 @@
 
             if (error) {
                 console.error('取得エラー:', error);
-                timeline.innerHTML = `<p class="text-center text-red-500 text-sm py-4">取得エラー: ${error.message}</p>`;
+                timeline.innerHTML = `<div class="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs text-center">投稿の取得に失敗しました: ${escapeHtml(error.message)}</div>`;
                 return;
             }
 
-            renderPosts(posts);
+            allPosts = posts || [];
+            renderPosts(allPosts);
         }
 
-        // 画面に投稿一覧を表示する関数
+        // Filter Posts dynamically via Search input
+        function filterPosts() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderPosts(allPosts);
+                return;
+            }
+            const filtered = allPosts.filter(post => 
+                (post.user_name && post.user_name.toLowerCase().includes(query)) ||
+                (post.content && post.content.toLowerCase().includes(query))
+            );
+            renderPosts(filtered);
+        }
+
+        // Render Posts in Timeline with modern card UI
         function renderPosts(posts) {
             timeline.innerHTML = '';
+            document.getElementById('postCountBadge').innerText = posts ? posts.length : 0;
 
             if (!posts || posts.length === 0) {
-                timeline.innerHTML = '<p class="text-center text-gray-500 text-sm py-4">投稿がまだありません。最初の投稿をしてみましょう！</p>';
+                timeline.innerHTML = `
+                    <div class="text-center py-12 bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                        <div class="text-3xl mb-2">💬</div>
+                        <h4 class="font-bold text-slate-700 text-sm">投稿が見つかりません</h4>
+                        <p class="text-xs text-slate-400 mt-1">最初のメッセージを投稿してみましょう！</p>
+                    </div>
+                `;
                 return;
             }
 
             posts.forEach(post => {
-                const dateStr = new Date(post.created_at).toLocaleString('ja-JP');
-                const postEl = document.createElement('div');
-                postEl.className = 'bg-white p-4 rounded-lg shadow relative group';
+                const dateObj = new Date(post.created_at);
+                const dateStr = isNaN(dateObj.getTime()) ? 'たった今' : dateObj.toLocaleString('ja-JP', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const userName = post.user_name || '名無しさん';
+                const initial = userName.charAt(0);
+                const avatarBg = getAvatarColor(userName);
+                const isLiked = likeState[post.id] || false;
+                const likeCount = (post.id % 7) + (isLiked ? 1 : 0);
+
+                const postEl = document.createElement('article');
+                postEl.className = 'bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow transition duration-200 space-y-3';
                 postEl.innerHTML = `
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                ${(post.user_name || '無').charAt(0)}
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-base flex-shrink-0 shadow-sm">
+                                ${escapeHtml(initial)}
                             </div>
                             <div>
-                                <div class="font-bold text-gray-800 text-sm">${escapeHtml(post.user_name || '名無しさん')}</div>
-                                <div class="text-xs text-gray-400">${dateStr}</div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-slate-900 text-sm hover:underline cursor-pointer">${escapeHtml(userName)}</span>
+                                    <span class="text-[10px] bg-slate-100 text-slate-500 font-semibold px-1.5 py-0.5 rounded">ユーザー</span>
+                                </div>
+                                <div class="text-xs text-slate-400 font-medium">${dateStr}</div>
                             </div>
                         </div>
+
                         <button 
                             onclick="deletePost(${post.id})" 
-                            class="text-xs text-red-400 hover:text-red-600 opacity-80 hover:opacity-100">
-                            削除
+                            title="投稿を削除"
+                            class="text-xs text-slate-300 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition">
+                            🗑️
                         </button>
                     </div>
-                    <p class="text-gray-700 text-sm whitespace-pre-wrap">${escapeHtml(post.content)}</p>
+
+                    <p class="text-slate-800 text-sm leading-relaxed whitespace-pre-wrap pl-1">${escapeHtml(post.content)}</p>
+
+                    <!-- Interactive Action Bar -->
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-400">
+                        <button class="flex items-center gap-1.5 hover:text-indigo-600 transition group py-1 px-2 rounded-lg hover:bg-slate-50">
+                            <span class="group-hover:scale-110 transition transform">💬</span>
+                            <span>返信</span>
+                        </button>
+                        <button class="flex items-center gap-1.5 hover:text-emerald-600 transition group py-1 px-2 rounded-lg hover:bg-slate-50">
+                            <span class="group-hover:scale-110 transition transform">🔁</span>
+                            <span>リポスト</span>
+                        </button>
+                        <button 
+                            onclick="toggleLike(${post.id})" 
+                            class="flex items-center gap-1.5 ${isLiked ? 'text-rose-500 font-bold' : 'hover:text-rose-500'} transition group py-1 px-2 rounded-lg hover:bg-slate-50">
+                            <span class="group-hover:scale-125 transition transform">${isLiked ? '❤️' : '🤍'}</span>
+                            <span>${likeCount}</span>
+                        </button>
+                        <button class="flex items-center gap-1.5 hover:text-indigo-600 transition group py-1 px-2 rounded-lg hover:bg-slate-50">
+                            <span class="group-hover:scale-110 transition transform">📤</span>
+                            <span>共有</span>
+                        </button>
+                    </div>
                 `;
                 timeline.appendChild(postEl);
             });
         }
 
-        // XSS対策用エスケープ
-        function escapeHtml(str) {
-            return str
-                .replace(/&/g, "&")
-                .replace(/</g, "<")
-                .replace(/>/g, ">")
-                .replace(/"/g, """)
-                .replace(/'/g, "'");
+        // Toggle Like Button
+        function toggleLike(postId) {
+            likeState[postId] = !likeState[postId];
+            filterPosts();
         }
 
-        // 新規投稿処理
+        // HTML Escape Helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Create New Post
         postBtn.addEventListener('click', async () => {
             const content = postInput.value.trim();
             const user_name = userInput.value.trim() || '名無しさん';
 
-            if (!content) return;
+            if (!content) {
+                alert('投稿内容を入力してください。');
+                return;
+            }
 
             if (!supabaseClient) {
-                alert('Supabaseの接続情報を設定してください。');
+                alert('Supabase接続が設定されていません。コード内の SUPABASE_URL と SUPABASE_ANON_KEY を設定してください。');
                 return;
             }
 
             postBtn.disabled = true;
-            postBtn.innerText = '送信中...';
+            postBtn.innerHTML = `
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>送信中...</span>
+            `;
 
-            // Supabaseのpostsテーブルへ挿入
             const { error } = await supabaseClient
                 .from('posts')
                 .insert([{ user_name, content }]);
 
             postBtn.disabled = false;
-            postBtn.innerText = '投稿する';
+            postBtn.innerHTML = `<span>投稿する</span><span class="text-xs">✨</span>`;
 
             if (error) {
                 alert('投稿に失敗しました: ' + error.message);
                 console.error(error);
             } else {
                 postInput.value = '';
-                fetchPosts(); // 投稿後に再読み込み
+                updateCharCount();
+                fetchPosts();
             }
         });
 
-        // 投稿削除処理
+        // Delete Post
         async function deletePost(id) {
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                allPosts = allPosts.filter(p => p.id !== id);
+                renderPosts(allPosts);
+                return;
+            }
+
             if (!confirm('本当にこの投稿を削除しますか？')) return;
 
             const { error } = await supabaseClient
@@ -197,7 +646,8 @@
             }
         }
 
-        // 初期表示時に投稿一覧を取得
+        // Initial Load
+        updateUserAvatar();
         fetchPosts();
     </script>
 </body>
