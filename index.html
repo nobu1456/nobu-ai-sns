@@ -180,12 +180,13 @@
   }
   .account-chip:hover{ background:var(--paper-deep);}
   .account-chip .avatar-icon{ width:28px; height:28px;}
-  .account-email{ font-size:12.5px; font-weight:700; color:var(--ink); max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .account-name{ font-size:12.5px; font-weight:700; color:var(--ink); max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .account-chip svg.logout-icon{ color:var(--ink-faint); flex-shrink:0;}
 
   .profile-logged-in{ text-align:center; padding:6px 4px 4px;}
   .profile-logged-in .avatar-icon{ margin:0 auto 10px;}
-  .profile-email{ font-size:13px; font-weight:700; word-break:break-all; margin-bottom:14px; color:var(--ink);}
+  .profile-name{ font-size:13.5px; font-weight:700; word-break:break-all; margin-bottom:2px; color:var(--ink);}
+  .profile-email-sub{ font-size:11px; color:var(--ink-faint); word-break:break-all; margin-bottom:14px;}
   .logout-btn{
     width:100%; background:var(--paper-deep); color:var(--ink-soft); border:1px solid var(--line);
     border-radius:20px; padding:9px 0; font-size:12.5px; font-weight:700;
@@ -200,12 +201,14 @@
   .modal-overlay{
     position:fixed; inset:0; z-index:400;
     background:rgba(31,51,80,0.45);
-    display:flex; align-items:center; justify-content:center; padding:20px;
+    display:none; align-items:center; justify-content:center; padding:20px;
   }
+  .modal-overlay.is-open{ display:flex; }
   .modal-card{
     background:var(--card); border-radius:20px; box-shadow:var(--shadow-lg);
     max-width:380px; width:100%; padding:26px 26px 28px; position:relative;
     border:1px solid var(--line);
+    max-height:90vh; overflow-y:auto;
   }
   .modal-close{
     position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%;
@@ -229,6 +232,7 @@
     font-size:14px; background:var(--paper); color:var(--ink);
   }
   .auth-field input:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,147,90,.15);}
+  .auth-field.auth-field-optional .auth-field-hint{ font-weight:400; color:var(--ink-faint); font-size:11px;}
   .auth-error{ background:#FBEAE7; color:var(--shu-deep); font-size:12px; border-radius:10px; padding:9px 12px; margin-bottom:12px; line-height:1.6;}
   .auth-submit{
     width:100%; background:var(--shu); color:#fff; border:none; border-radius:20px;
@@ -429,7 +433,7 @@
   .menu-item.active-state svg{ color:var(--matcha);}
   .menu-divider{ height:1px; background:var(--line); margin:5px 6px;}
 
-  /* ===== Reply (返信・セッション内のみ保持) ===== */
+  /* ===== Reply (返信・commentsテーブルで永続化) ===== */
   .reply-section{ margin-top:8px; padding-top:10px; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:10px;}
   .reply-list{ display:flex; flex-direction:column; gap:8px;}
   .reply-item{ display:flex; gap:8px;}
@@ -503,7 +507,7 @@
     .search-wrap{ display:none;}
     .app-shell{ grid-template-columns:1fr; padding-bottom:86px;}
     nav.side-nav{ display:none;}
-    .account-email{ max-width:70px;}
+    .account-name{ max-width:70px;}
     .bottom-nav{
       display:flex; justify-content:space-around; align-items:center;
       position:fixed; bottom:0; left:0; right:0; height:60px;
@@ -712,7 +716,7 @@
 
 </div>
 
-<footer class="foot-note">結 -yui- はGitHub Pages + Supabaseで構築中の個人開発プロジェクトです。投稿・保存・拡散・制限はSupabaseデータベースに保存され、全ユーザーで共有されます。いいねの押下状態と返信内容は現在この閲覧セッション内でのみ保持されます（今後専用テーブルを追加して永続化予定）。</footer>
+<footer class="foot-note">結 -yui- はGitHub Pages + Supabaseで構築中の個人開発プロジェクトです。投稿・いいね・返信・保存・拡散・制限はすべてSupabaseデータベースに保存され、全ユーザーで共有されます。</footer>
 
 <!-- Mobile bottom nav -->
 <nav class="bottom-nav">
@@ -738,7 +742,7 @@
 </nav>
 
 <!-- ===== Auth Modal (ログイン / 新規登録) ===== -->
-<div class="modal-overlay" id="authModalOverlay" hidden>
+<div class="modal-overlay" id="authModalOverlay">
   <div class="modal-card">
     <button class="modal-close" id="authModalClose" aria-label="閉じる">×</button>
     <h3>結 -yui-</h3>
@@ -749,6 +753,9 @@
     </div>
     <p class="auth-error" id="authError" hidden></p>
     <form id="authForm">
+      <label class="auth-field" id="authDisplayNameField" hidden>表示名（ニックネーム）
+        <input type="text" id="authDisplayName" autocomplete="nickname" placeholder="例: ゆい">
+      </label>
       <label class="auth-field">メールアドレス
         <input type="email" id="authEmail" required autocomplete="email" placeholder="you@example.com">
       </label>
@@ -769,21 +776,24 @@
 /* =====================================================================
    結 -yui- : フロントエンド ロジック
    -----------------------------------------------------------------
-   [データの持ち場]
-   ・posts       : 投稿本体            → Supabase（全ユーザー共有）
-   ・bookmarks   : 保存                → Supabase（ユーザー別）
-   ・reposts     : 拡散                → Supabase（ユーザー別）
-   ・user_blocks : 制限（ブロック）     → Supabase（ユーザー別）
-   ・いいね済みフラグ／返信内容
-                 → この閲覧セッション内のJSメモリのみで保持（非永続）。
-                   likes / comments 用テーブルが未整備のための暫定措置。
-                   将来テーブルを追加したら db 層に fetch/insert/delete を
-                   追加するだけで永続化に移行できるよう構造化してある。
+   [データの持ち場：すべてSupabase（全ユーザー共有）]
+   ・posts       : 投稿本体
+   ・comments    : 返信
+   ・likes       : いいね（UNIQUE(user_name, post_id)でトグル管理）
+   ・bookmarks   : 保存
+   ・reposts     : 拡散
+   ・user_blocks : 制限（ブロック）
+
+   [ユーザー名の扱い]
+   各テーブルの user_name / blocker_name には、ログイン中ユーザーの
+   auth.user_metadata.display_name（新規登録時に入力した表示名）を
+   優先して使用する。未設定の場合のみメールアドレスにフォールバックする。
+   → currentUserName() 関数に一元化。
 
    [認証]
    Supabase Auth（メール/パスワード）。onAuthStateChange でログイン状態を
-   監視し、未ログイン時は「新規投稿・いいね・保存・拡散・削除・制限」の
-   操作でログインモーダルを表示する（requireLogin()で一元管理）。
+   監視し、未ログイン時は「新規投稿・いいね・保存・拡散・削除・制限・返信」
+   の操作でログインモーダルを表示する（requireLogin()で一元管理）。
 
    [Coming Soon]
    [data-coming-soon="ラベル"] を付けた要素はクリックで自動的に
@@ -792,8 +802,6 @@
 
 (() => {
   /* ---------------- Supabase 接続設定 ---------------- */
-  // anon key は RLS(Row Level Security) で保護される前提の公開鍵のため
-  // フロントエンドに直接記述して問題ない（Supabase公式の想定用途）。
   const SUPABASE_URL = 'https://mlekwhuzptiaztsbutgg.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sZWt3aHV6cHRpYXp0c2J1dGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NzA5NjYsImV4cCI6MjEwMjM0Njk2Nn0.xE0Gun8SjiVkz15GaG69f_yfKNkZTfQVOGPX5PzQt4s';
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -857,6 +865,32 @@
     async addBlock(blockerName, blockedName){
       const { error } = await supabaseClient.from('user_blocks').insert({ blocker_name: blockerName, blocked_name: blockedName });
       if(error) throw error;
+    },
+    async fetchMyLikes(userName){
+      const { data, error } = await supabaseClient.from('likes').select('post_id').eq('user_name', userName);
+      if(error) throw error;
+      return data || [];
+    },
+    async addLike(userName, postId){
+      const { error } = await supabaseClient.from('likes').insert({ user_name: userName, post_id: postId });
+      if(error) throw error;
+    },
+    async removeLike(userName, postId){
+      const { error } = await supabaseClient.from('likes').delete().eq('user_name', userName).eq('post_id', postId);
+      if(error) throw error;
+    },
+    async fetchComments(postIds){
+      if(!postIds.length) return [];
+      const { data, error } = await supabaseClient
+        .from('comments').select('*').in('post_id', postIds).order('created_at', { ascending: true });
+      if(error) throw error;
+      return data || [];
+    },
+    async addComment(userName, postId, content){
+      const { data, error } = await supabaseClient
+        .from('comments').insert({ user_name: userName, post_id: postId, content }).select().single();
+      if(error) throw error;
+      return data;
     }
   };
 
@@ -866,7 +900,7 @@
   let userBookmarks = new Set();  // 自分が保存した post_id（文字列）
   let userReposts = new Set();    // 自分が拡散した post_id（文字列）
   let userBlocks = new Set();     // 自分が制限した user_name
-  const sessionReplies = {};      // { [postId]: [{id,text,createdAt}] } ※このタブを開いている間だけ保持
+  let userLikes = new Set();      // 自分がいいねした post_id（文字列）
   let activeTab = 'timeline';
   let openReplyId = null;
   let openMenuPostId = null;
@@ -882,6 +916,8 @@
     profilePanelBody: document.getElementById('profilePanelBody'),
     authOverlay: document.getElementById('authModalOverlay'),
     authForm: document.getElementById('authForm'),
+    authDisplayNameField: document.getElementById('authDisplayNameField'),
+    authDisplayName: document.getElementById('authDisplayName'),
     authEmail: document.getElementById('authEmail'),
     authPassword: document.getElementById('authPassword'),
     authError: document.getElementById('authError'),
@@ -890,11 +926,15 @@
   };
 
   /* ---------------- ユーティリティ ---------------- */
-  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const findPost = (id) => posts.find(p => String(p.id) === String(id));
   const isLoggedIn = () => !!currentUser;
-  const currentUserName = () => currentUser ? currentUser.email : null;
-  const shortEmail = (email) => !email ? '' : (email.length > 16 ? email.slice(0, 14) + '…' : email);
+
+  // 各テーブルの user_name に使う値：表示名（display_name）優先、未設定ならメールアドレス
+  function currentUserName(){
+    if(!currentUser) return null;
+    return (currentUser.user_metadata && currentUser.user_metadata.display_name) || currentUser.email;
+  }
+  const shortName = (name) => !name ? '' : (name.length > 16 ? name.slice(0, 14) + '…' : name);
 
   const escapeHtml = (str) => String(str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -976,10 +1016,10 @@
           <div class="avatar avatar-icon">${ICON.person}</div>
           <div class="reply-bubble">
             <div class="reply-meta">
-              <span class="reply-name">${escapeHtml(isLoggedIn() ? shortEmail(currentUserName()) : 'ゲスト')}</span>
-              <span class="reply-time">${timeAgo(new Date(c.createdAt).toISOString())}</span>
+              <span class="reply-name">${escapeHtml(c.user_name === currentUserName() ? 'あなた' : c.user_name)}</span>
+              <span class="reply-time">${timeAgo(c.created_at)}</span>
             </div>
-            <div class="reply-text">${escapeHtml(c.text)}</div>
+            <div class="reply-text">${escapeHtml(c.content)}</div>
           </div>
         </div>`).join('')
       : `<div class="reply-empty">まだ返信はありません。</div>`;
@@ -1088,23 +1128,30 @@
     el.headerAccountArea.innerHTML = isLoggedIn()
       ? `<button class="account-chip" data-action="logout" title="ログアウト">
            <span class="avatar avatar-icon">${ICON.person}</span>
-           <span class="account-email">${escapeHtml(shortEmail(currentUserName()))}</span>
+           <span class="account-name">${escapeHtml(shortName(currentUserName()))}</span>
            ${ICON.logout}
          </button>`
       : `<button class="auth-open-btn" data-action="open-auth">ログイン / 新規登録</button>`;
   }
 
   function renderProfilePanel(){
-    el.profilePanelBody.innerHTML = isLoggedIn()
-      ? `<div class="profile-logged-in">
-           <div class="avatar avatar-icon" style="width:46px;height:46px;">${ICON.person}</div>
-           <p class="profile-email">${escapeHtml(currentUserName())}</p>
-           <button class="logout-btn" data-action="logout">${ICON.logout}<span>ログアウト</span></button>
-         </div>`
-      : `<div class="profile-guest">
-           <p>ログインすると投稿・いいね・保存・拡散・制限などの機能が使えます。</p>
-           <button class="auth-open-btn" data-action="open-auth" style="width:100%;">ログイン / 新規登録</button>
-         </div>`;
+    if(isLoggedIn()){
+      const displayName = currentUserName();
+      const showEmailSub = displayName !== currentUser.email;
+      el.profilePanelBody.innerHTML = `
+        <div class="profile-logged-in">
+          <div class="avatar avatar-icon" style="width:46px;height:46px;">${ICON.person}</div>
+          <p class="profile-name">${escapeHtml(displayName)}</p>
+          ${showEmailSub ? `<p class="profile-email-sub">${escapeHtml(currentUser.email)}</p>` : ''}
+          <button class="logout-btn" data-action="logout">${ICON.logout}<span>ログアウト</span></button>
+        </div>`;
+    }else{
+      el.profilePanelBody.innerHTML = `
+        <div class="profile-guest">
+          <p>ログインすると投稿・いいね・保存・拡散・制限などの機能が使えます。</p>
+          <button class="auth-open-btn" data-action="open-auth" style="width:100%;">ログイン / 新規登録</button>
+        </div>`;
+    }
   }
 
   function updateComposerState(){
@@ -1118,11 +1165,11 @@
   function openAuthModal(){
     el.authError.hidden = true;
     el.authForm.reset();
-    el.authOverlay.hidden = false;
+    el.authOverlay.classList.add('is-open');
     setTimeout(() => el.authEmail.focus(), 50);
   }
   function closeAuthModal(){
-    el.authOverlay.hidden = true;
+    el.authOverlay.classList.remove('is-open');
   }
   function setAuthMode(mode){
     authMode = mode;
@@ -1130,6 +1177,8 @@
     el.authSubmitBtn.textContent = mode === 'signup' ? '新規登録する' : 'ログインする';
     el.authPassword.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
     el.authError.hidden = true;
+    el.authDisplayNameField.hidden = (mode !== 'signup');
+    el.authDisplayName.required = (mode === 'signup');
   }
   el.authTabs.forEach(tab => tab.addEventListener('click', () => setAuthMode(tab.dataset.authTab)));
   document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
@@ -1144,7 +1193,11 @@
     el.authSubmitBtn.textContent = '処理中…';
     try{
       if(authMode === 'signup'){
-        const { error } = await supabaseClient.auth.signUp({ email, password });
+        const displayName = el.authDisplayName.value.trim();
+        const { error } = await supabaseClient.auth.signUp({
+          email, password,
+          options: { data: { display_name: displayName } }
+        });
         if(error) throw error;
         showToast('登録しました。確認メールが届いている場合はご確認ください');
         closeAuthModal();
@@ -1155,6 +1208,7 @@
         closeAuthModal();
       }
     }catch(err){
+      console.error('認証エラー', err);
       el.authError.textContent = err.message || 'エラーが発生しました。もう一度お試しください';
       el.authError.hidden = false;
     }finally{
@@ -1176,14 +1230,16 @@
   /* ---------------- 初期読み込み・認証連動 ---------------- */
   async function loadUserRelations(){
     try{
-      const [bookmarkRows, repostRows, blockRows] = await Promise.all([
+      const [bookmarkRows, repostRows, blockRows, likeRows] = await Promise.all([
         db.fetchBookmarks(currentUserName()),
         db.fetchReposts(currentUserName()),
-        db.fetchBlocks(currentUserName())
+        db.fetchBlocks(currentUserName()),
+        db.fetchMyLikes(currentUserName())
       ]);
       userBookmarks = new Set(bookmarkRows.map(r => String(r.post_id)));
       userReposts = new Set(repostRows.map(r => String(r.post_id)));
       userBlocks = new Set(blockRows.map(r => r.blocked_name));
+      userLikes = new Set(likeRows.map(r => String(r.post_id)));
     }catch(err){
       console.error('ユーザー関連データの取得に失敗しました', err);
     }
@@ -1193,13 +1249,20 @@
     if(activeTab === 'timeline') el.feedContent.innerHTML = loadingStateTemplate();
     try{
       const rows = await db.fetchPosts();
-      posts = rows
-        .filter(row => !userBlocks.has(row.user_name))
-        .map(row => ({
-          ...row,
-          liked: false,
-          comments: sessionReplies[row.id] || []
-        }));
+      const visibleRows = rows.filter(row => !userBlocks.has(row.user_name));
+      const ids = visibleRows.map(r => r.id);
+      const commentRows = await db.fetchComments(ids);
+      const commentsByPost = {};
+      commentRows.forEach(c => {
+        const key = String(c.post_id);
+        if(!commentsByPost[key]) commentsByPost[key] = [];
+        commentsByPost[key].push(c);
+      });
+      posts = visibleRows.map(row => ({
+        ...row,
+        liked: userLikes.has(String(row.id)),
+        comments: commentsByPost[String(row.id)] || []
+      }));
       renderTab();
     }catch(err){
       console.error('投稿の取得に失敗しました', err);
@@ -1217,6 +1280,7 @@
       userBookmarks = new Set();
       userReposts = new Set();
       userBlocks = new Set();
+      userLikes = new Set();
     }
     await loadPosts();
   }
@@ -1242,44 +1306,56 @@
     }
   }
 
-  /* ---------------- いいね（本セッション内のみのフラグ＋共有カウンター更新） ---------------- */
+  /* ---------------- いいね（likesテーブルでトグル管理 ＋ likes_countを同期更新） ---------------- */
   async function toggleLike(postId){
     if(!requireLogin()) return;
     const post = findPost(postId);
     if(!post) return;
-    const wasLiked = !!post.liked;
+    const key = String(postId);
+    const wasLiked = userLikes.has(key);
     const prevCount = post.likes_count ?? 0;
 
     post.liked = !wasLiked;
     post.likes_count = prevCount + (post.liked ? 1 : -1);
+    if(post.liked) userLikes.add(key); else userLikes.delete(key);
     updatePostElement(postId, post.liked);
 
     try{
+      if(wasLiked){
+        await db.removeLike(currentUserName(), postId);
+      }else{
+        await db.addLike(currentUserName(), postId);
+      }
       await db.updateLikes(postId, post.likes_count);
     }catch(err){
       console.error('いいねの更新に失敗しました', err);
       post.liked = wasLiked;
       post.likes_count = prevCount;
+      if(wasLiked) userLikes.add(key); else userLikes.delete(key);
       updatePostElement(postId);
       showToast('いいねに失敗しました。通信環境をご確認ください');
     }
   }
 
-  /* ---------------- 返信（セッション内のみ保持） ---------------- */
+  /* ---------------- 返信（commentsテーブルで永続化） ---------------- */
   function toggleReply(postId){
     openReplyId = (openReplyId === postId) ? null : postId;
     updatePostElement(postId);
   }
 
-  function addComment(postId, text){
+  async function addComment(postId, text){
+    if(!requireLogin()) return;
     const post = findPost(postId);
     if(!post) return;
-    const comment = { id: uid(), text, createdAt: Date.now() };
-    post.comments = post.comments || [];
-    post.comments.push(comment);
-    if(!sessionReplies[postId]) sessionReplies[postId] = [];
-    sessionReplies[postId].push(comment);
-    updatePostElement(postId);
+    try{
+      const row = await db.addComment(currentUserName(), postId, text);
+      post.comments = post.comments || [];
+      post.comments.push(row);
+      updatePostElement(postId);
+    }catch(err){
+      console.error('返信の送信に失敗しました', err);
+      showToast('返信の送信に失敗しました。通信環境をご確認ください');
+    }
   }
 
   /* ---------------- 投稿メニュー ---------------- */
@@ -1436,6 +1512,14 @@
       const text = e.target.value.trim();
       if(text === '') return;
       addComment(postId, text);
+    }
+  });
+
+  // 返信欄フォーカス時、未ログインならログインモーダルへ誘導
+  el.feedContent.addEventListener('focusin', (e) => {
+    if(e.target.classList.contains('reply-textarea') && !isLoggedIn()){
+      e.target.blur();
+      openAuthModal();
     }
   });
 
