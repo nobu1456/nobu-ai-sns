@@ -32,7 +32,6 @@
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
   }
-  /* subtle washi paper texture */
   body::before{
     content:"";
     position:fixed; inset:0;
@@ -46,6 +45,50 @@
   a{color:inherit; text-decoration:none;}
   button{font-family:inherit; cursor:pointer;}
   ::selection{background:var(--shu); color:#fff;}
+
+  /* ============================================================
+     PASSWORD GATE: START (削除する場合はこのCSSブロックを丸ごと削除)
+  ============================================================ */
+  body.gate-locked{ overflow:hidden; }
+  .gate-overlay{
+    position:fixed; inset:0; z-index:1000;
+    background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    transition:opacity .3s ease;
+  }
+  .gate-overlay::before{
+    content:"";
+    position:absolute; inset:0; pointer-events:none; opacity:.3;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='30' viewBox='0 0 60 30'%3E%3Cg fill='none' stroke='%23B8935A' stroke-width='1' opacity='0.4'%3E%3Cpath d='M0 30 A15 15 0 0 1 30 30 A15 15 0 0 1 60 30'/%3E%3Cpath d='M0 24 A10 10 0 0 1 20 24 A10 10 0 0 1 40 24 A10 10 0 0 1 60 24' transform='translate(0,6)'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat:repeat; background-size:60px 30px;
+  }
+  .gate-overlay.gate-hidden{ opacity:0; pointer-events:none;}
+  .gate-card{
+    position:relative; z-index:1;
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    box-shadow:var(--shadow-lg); padding:36px 30px; max-width:340px; width:100%;
+    text-align:center;
+  }
+  .gate-card .hanko-logo{ margin:0 auto 14px; }
+  .gate-card h2{ font-family:'Shippori Mincho',serif; font-size:18px; margin-bottom:6px;}
+  .gate-card .gate-desc{ font-size:12.5px; color:var(--ink-faint); margin-bottom:22px; line-height:1.7;}
+  .gate-card input{
+    width:100%; border:1px solid var(--line); border-radius:12px; padding:11px 14px;
+    font-family:inherit; font-size:14px; margin-bottom:10px; background:var(--paper);
+    text-align:center; letter-spacing:.12em; color:var(--ink);
+  }
+  .gate-card input:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,147,90,.15);}
+  .gate-card .gate-error{ color:var(--shu); font-size:12px; margin-bottom:10px;}
+  .gate-card button{
+    width:100%; background:var(--shu); color:#fff; border:none; border-radius:20px;
+    padding:11px 0; font-size:14px; font-weight:700; letter-spacing:.05em;
+    transition:background .15s ease;
+  }
+  .gate-card button:hover{ background:var(--shu-deep); }
+  /* ============================================================
+     PASSWORD GATE: END
+  ============================================================ */
 
   /* ===== Header ===== */
   header.topbar{
@@ -120,9 +163,80 @@
     font-family:'Shippori Mincho',serif; font-weight:700; font-size:14px;
     flex-shrink:0;
   }
-  /* 未ログイン/汎用ユーザーを表す仮アバター（認証機能実装までの暫定表示） */
   .avatar-icon{ background:var(--paper-deep); border:1px solid var(--line);}
   .avatar-icon svg{ width:58%; height:58%; color:var(--ink-faint);}
+
+  /* ===== Auth (login/logout) UI ===== */
+  .auth-open-btn{
+    background:var(--ink); color:var(--paper); border:none; border-radius:20px;
+    padding:9px 18px; font-size:13px; font-weight:700; letter-spacing:.03em;
+    white-space:nowrap; transition:background .15s ease;
+  }
+  .auth-open-btn:hover{ background:#152438;}
+  .account-chip{
+    display:flex; align-items:center; gap:8px; background:var(--card);
+    border:1px solid var(--line); border-radius:24px; padding:5px 14px 5px 5px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .account-chip:hover{ background:var(--paper-deep);}
+  .account-chip .avatar-icon{ width:28px; height:28px;}
+  .account-email{ font-size:12.5px; font-weight:700; color:var(--ink); max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .account-chip svg.logout-icon{ color:var(--ink-faint); flex-shrink:0;}
+
+  .profile-logged-in{ text-align:center; padding:6px 4px 4px;}
+  .profile-logged-in .avatar-icon{ margin:0 auto 10px;}
+  .profile-email{ font-size:13px; font-weight:700; word-break:break-all; margin-bottom:14px; color:var(--ink);}
+  .logout-btn{
+    width:100%; background:var(--paper-deep); color:var(--ink-soft); border:1px solid var(--line);
+    border-radius:20px; padding:9px 0; font-size:12.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .logout-btn:hover{ background:var(--line); color:var(--ink);}
+  .profile-guest{ text-align:center; padding:4px 2px;}
+  .profile-guest p{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; margin-bottom:14px;}
+
+  /* ===== Auth Modal ===== */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:400;
+    background:rgba(31,51,80,0.45);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-card{
+    background:var(--card); border-radius:20px; box-shadow:var(--shadow-lg);
+    max-width:380px; width:100%; padding:26px 26px 28px; position:relative;
+    border:1px solid var(--line);
+  }
+  .modal-close{
+    position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%;
+    background:none; border:none; color:var(--ink-faint); display:flex; align-items:center; justify-content:center;
+    font-size:20px; transition:background .15s ease;
+  }
+  .modal-close:hover{ background:var(--paper-deep); color:var(--ink);}
+  .modal-card h3{ font-family:'Shippori Mincho',serif; font-size:19px; margin-bottom:4px; text-align:center;}
+  .modal-sub{ font-size:12px; color:var(--ink-faint); text-align:center; margin-bottom:18px;}
+  .modal-tabs{
+    display:flex; gap:4px; background:var(--paper-deep); border-radius:12px; padding:4px; margin-bottom:18px;
+  }
+  .modal-tab{
+    flex:1; padding:8px 0; border-radius:9px; border:none; background:none; font-family:inherit;
+    font-size:13px; font-weight:700; color:var(--ink-faint); transition:background .15s ease,color .15s ease;
+  }
+  .modal-tab.active{ background:var(--card); color:var(--shu); box-shadow:var(--shadow);}
+  .auth-field{ display:flex; flex-direction:column; gap:5px; margin-bottom:14px; font-size:12.5px; color:var(--ink-soft); font-weight:700;}
+  .auth-field input{
+    border:1px solid var(--line); border-radius:12px; padding:10px 14px; font-family:inherit;
+    font-size:14px; background:var(--paper); color:var(--ink);
+  }
+  .auth-field input:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,147,90,.15);}
+  .auth-error{ background:#FBEAE7; color:var(--shu-deep); font-size:12px; border-radius:10px; padding:9px 12px; margin-bottom:12px; line-height:1.6;}
+  .auth-submit{
+    width:100%; background:var(--shu); color:#fff; border:none; border-radius:20px;
+    padding:11px 0; font-size:14px; font-weight:700; letter-spacing:.04em;
+    transition:background .15s ease;
+  }
+  .auth-submit:hover{ background:var(--shu-deep);}
+  .auth-submit:disabled{ opacity:.5; cursor:not-allowed;}
 
   /* ===== Layout ===== */
   .app-shell{
@@ -199,6 +313,7 @@
     padding:9px 22px; font-size:14px; font-weight:700; letter-spacing:.04em;
     box-shadow:0 3px 10px rgba(187,68,48,.3);
     transition:background .15s ease, transform .12s ease;
+    min-width:96px;
   }
   .post-submit:hover{ background:var(--shu-deep); transform:translateY(-1px);}
   .post-submit:disabled{ opacity:.45; cursor:not-allowed; transform:none;}
@@ -218,7 +333,7 @@
 
   #feedContent{ display:flex; flex-direction:column; gap:16px;}
 
-  /* ===== Empty state ===== */
+  /* ===== Empty / loading / error state ===== */
   .empty-state{
     text-align:center; padding:52px 20px;
     background:var(--card); border:1.5px dashed var(--line); border-radius:16px;
@@ -227,7 +342,7 @@
   .empty-state svg{ color:var(--gold); margin-bottom:14px;}
   .empty-state p{ font-size:14px; line-height:1.8; max-width:320px; margin:0 auto;}
 
-  /* ===== Coming soon (feed / sidebar 共通) ===== */
+  /* ===== Coming soon (sidebar) ===== */
   .coming-soon-panel{ text-align:center; padding:30px 12px; color:var(--ink-faint);}
   .coming-soon-badge{
     display:inline-block; font-family:'Shippori Mincho',serif; font-weight:700; font-size:12px;
@@ -251,7 +366,10 @@
   .post-meta{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
   .post-name{ font-weight:700; font-size:14.5px;}
   .post-time{ font-size:12.5px; color:var(--ink-faint);}
-  .post-more{ margin-left:auto; color:var(--ink-faint); flex-shrink:0; background:none; border:none; display:flex; padding:2px;}
+  .repost-badge{
+    font-size:11px; font-weight:700; color:var(--matcha); background:#EEF1E9;
+    border-radius:10px; padding:2px 9px; display:inline-flex; align-items:center; gap:4px;
+  }
   .post-text{ margin-top:6px; font-size:15px; line-height:1.75; color:var(--ink); white-space:pre-line; word-break:break-word;}
 
   .post-actions{
@@ -265,9 +383,7 @@
     transition:background .15s ease, color .15s ease;
   }
   .action-btn:hover{ background:var(--paper-deep); color:var(--ink-soft);}
-  .action-btn.share:hover{ color:var(--matcha);}
 
-  /* hanko-style like button */
   .action-btn.like{ position:relative; }
   .action-btn.like svg{ transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
   .action-btn.like.liked{ color:var(--shu); font-weight:700;}
@@ -286,7 +402,34 @@
     100%{ opacity:0; transform:scale(.75) rotate(-14deg);}
   }
 
-  /* ===== Reply (返信) ===== */
+  /* ===== 投稿メニュー(「…」ボタン) ===== */
+  .post-menu-wrap{ position:relative; margin-left:auto; flex-shrink:0;}
+  .post-more{
+    color:var(--ink-faint); background:none; border:none; display:flex; padding:6px;
+    border-radius:50%; transition:background .15s ease, color .15s ease;
+  }
+  .post-more:hover, .post-more[aria-expanded="true"]{ background:var(--paper-deep); color:var(--ink);}
+  .post-menu{
+    position:absolute; top:calc(100% + 6px); right:0;
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    box-shadow:var(--shadow-lg); padding:6px; min-width:196px; z-index:30;
+    display:flex; flex-direction:column;
+  }
+  .menu-item{
+    display:flex; align-items:center; gap:10px; width:100%;
+    padding:9px 12px; border-radius:9px; border:none; background:none;
+    font-family:inherit; font-size:13.5px; color:var(--ink); text-align:left;
+    transition:background .12s ease; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .menu-item:hover{ background:var(--paper-deep);}
+  .menu-item svg{ flex-shrink:0; color:var(--ink-soft);}
+  .menu-item.danger{ color:var(--shu);}
+  .menu-item.danger svg{ color:var(--shu);}
+  .menu-item.active-state{ color:var(--matcha);}
+  .menu-item.active-state svg{ color:var(--matcha);}
+  .menu-divider{ height:1px; background:var(--line); margin:5px 6px;}
+
+  /* ===== Reply (返信・セッション内のみ保持) ===== */
   .reply-section{ margin-top:8px; padding-top:10px; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:10px;}
   .reply-list{ display:flex; flex-direction:column; gap:8px;}
   .reply-item{ display:flex; gap:8px;}
@@ -326,22 +469,22 @@
   }
   .panel-title{
     font-family:'Shippori Mincho',serif; font-weight:700; font-size:15px;
-    display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--ink);
+    display:flex; align-items:center; gap:8px; margin-bottom:10px; color:var(--ink);
   }
   .panel-title::before{ content:""; width:4px; height:14px; background:var(--shu); border-radius:2px; display:inline-block;}
 
   footer.foot-note{
     max-width:1180px; margin:0 auto; padding:0 20px 40px;
-    font-size:11.5px; color:var(--ink-faint); letter-spacing:.03em;
+    font-size:11.5px; color:var(--ink-faint); letter-spacing:.03em; line-height:1.7;
   }
 
-  /* ===== Toast (Coming Soon 通知) ===== */
+  /* ===== Toast ===== */
   .toast{
     position:fixed; left:50%; bottom:28px; transform:translate(-50%,16px);
     background:var(--ink); color:var(--paper); font-size:13px; font-weight:500;
     padding:11px 22px; border-radius:24px; box-shadow:0 10px 28px rgba(31,51,80,.3);
     opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
-    z-index:300; letter-spacing:.02em;
+    z-index:300; letter-spacing:.02em; max-width:88vw; text-align:center;
   }
   .toast.show{ opacity:1; transform:translate(-50%,0);}
 
@@ -360,6 +503,7 @@
     .search-wrap{ display:none;}
     .app-shell{ grid-template-columns:1fr; padding-bottom:86px;}
     nav.side-nav{ display:none;}
+    .account-email{ max-width:70px;}
     .bottom-nav{
       display:flex; justify-content:space-around; align-items:center;
       position:fixed; bottom:0; left:0; right:0; height:60px;
@@ -377,6 +521,69 @@
 </style>
 </head>
 <body>
+
+<!-- ================================================================
+     PASSWORD GATE: START (削除する場合はこのHTMLブロックを丸ごと削除)
+==================================================================== -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-card">
+    <div class="hanko-logo" style="margin-left:auto;margin-right:auto;">結</div>
+    <h2>結 -yui-（開発中）</h2>
+    <p class="gate-desc">現在開発中のため、合言葉を知っている方のみ閲覧いただけます。</p>
+    <form id="gateForm">
+      <input type="password" id="gatePasswordInput" placeholder="合言葉を入力" autocomplete="off">
+      <p class="gate-error" id="gateError" hidden>合言葉が違います。もう一度お試しください。</p>
+      <button type="submit">入室する</button>
+    </form>
+  </div>
+</div>
+<script>
+/* ============ PASSWORD GATE JS: START (削除する場合はこの<script>ブロックを丸ごと削除) ============ */
+(() => {
+  const GATE_PASSWORD = 'yui2026'; // 合言葉（この定数を変更するだけで変更可）
+  const GATE_STORAGE_KEY = 'yui_gate_passed_v1';
+  const overlay = document.getElementById('gateOverlay');
+  const form = document.getElementById('gateForm');
+  const input = document.getElementById('gatePasswordInput');
+  const errorEl = document.getElementById('gateError');
+  if(!overlay) return;
+
+  function unlock(){
+    overlay.classList.add('gate-hidden');
+    document.body.classList.remove('gate-locked');
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  }
+
+  try{
+    if(sessionStorage.getItem(GATE_STORAGE_KEY) === '1'){
+      overlay.style.display = 'none';
+    }else{
+      document.body.classList.add('gate-locked');
+      setTimeout(() => input && input.focus(), 100);
+    }
+  }catch(e){
+    document.body.classList.add('gate-locked');
+  }
+
+  if(form){
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if(input.value === GATE_PASSWORD){
+        try{ sessionStorage.setItem(GATE_STORAGE_KEY, '1'); }catch(e){}
+        unlock();
+      }else{
+        errorEl.hidden = false;
+        input.value = '';
+        input.focus();
+      }
+    });
+  }
+})();
+/* ============ PASSWORD GATE JS: END ============ */
+</script>
+<!-- ================================================================
+     PASSWORD GATE: END
+==================================================================== -->
 
 <header class="topbar">
   <div class="topbar-seigaiha">
@@ -402,9 +609,7 @@
       <button class="icon-btn" aria-label="メッセージ" data-coming-soon="メッセージ">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </button>
-      <button class="icon-btn avatar avatar-icon" aria-label="アカウント" data-coming-soon="アカウント" style="border-radius:50%;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </button>
+      <div id="headerAccountArea"></div>
     </div>
   </div>
 </header>
@@ -485,10 +690,7 @@
   <aside class="side-panel">
     <div class="panel-card">
       <div class="panel-title">プロフィール</div>
-      <div class="coming-soon-panel">
-        <span class="coming-soon-badge">Coming Soon</span>
-        <p>ユーザー登録・ログイン機能は<br>今後実装予定です。</p>
-      </div>
+      <div id="profilePanelBody"></div>
     </div>
 
     <div class="panel-card">
@@ -510,7 +712,7 @@
 
 </div>
 
-<footer class="foot-note">結 -yui- はGitHub Pages + Supabaseで構築中の個人開発プロジェクトです。本ページはUIの叩き台であり、投稿・いいね・返信はこの端末内に仮保存されています（Supabase連携後にデータベースへ移行予定）。</footer>
+<footer class="foot-note">結 -yui- はGitHub Pages + Supabaseで構築中の個人開発プロジェクトです。投稿・保存・拡散・制限はSupabaseデータベースに保存され、全ユーザーで共有されます。いいねの押下状態と返信内容は現在この閲覧セッション内でのみ保持されます（今後専用テーブルを追加して永続化予定）。</footer>
 
 <!-- Mobile bottom nav -->
 <nav class="bottom-nav">
@@ -535,65 +737,171 @@
   </a>
 </nav>
 
+<!-- ===== Auth Modal (ログイン / 新規登録) ===== -->
+<div class="modal-overlay" id="authModalOverlay" hidden>
+  <div class="modal-card">
+    <button class="modal-close" id="authModalClose" aria-label="閉じる">×</button>
+    <h3>結 -yui-</h3>
+    <p class="modal-sub">投稿・いいね・保存などにはログインが必要です</p>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-auth-tab="login">ログイン</button>
+      <button class="modal-tab" data-auth-tab="signup">新規登録</button>
+    </div>
+    <p class="auth-error" id="authError" hidden></p>
+    <form id="authForm">
+      <label class="auth-field">メールアドレス
+        <input type="email" id="authEmail" required autocomplete="email" placeholder="you@example.com">
+      </label>
+      <label class="auth-field">パスワード（6文字以上）
+        <input type="password" id="authPassword" required autocomplete="current-password" minlength="6" placeholder="••••••••">
+      </label>
+      <button type="submit" class="auth-submit" id="authSubmitBtn">ログイン</button>
+    </form>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<!-- Supabase クライアント（この後の自作スクリプトより先に読み込む） -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 /* =====================================================================
    結 -yui- : フロントエンド ロジック
    -----------------------------------------------------------------
-   このファイルは「投稿 / いいね / 返信」の3機能のみを実装したUI叩き台。
-   データは localStorage に仮保存しており、db オブジェクトの中身を
-   supabase-js の select / insert / update に差し替えるだけで
-   Supabase連携（フェーズ3以降）に移行できるよう設計している。
-   それ以外の機能（検索・通知・DM・プロフィール・タグ・フォロー等）は
-   [data-coming-soon] 属性を付けるだけで自動的に "Coming Soon" トースト
-   が表示される仕組みになっており、実装済みのものから順に
-   data-coming-soon を外していけば機能拡張できる。
+   [データの持ち場]
+   ・posts       : 投稿本体            → Supabase（全ユーザー共有）
+   ・bookmarks   : 保存                → Supabase（ユーザー別）
+   ・reposts     : 拡散                → Supabase（ユーザー別）
+   ・user_blocks : 制限（ブロック）     → Supabase（ユーザー別）
+   ・いいね済みフラグ／返信内容
+                 → この閲覧セッション内のJSメモリのみで保持（非永続）。
+                   likes / comments 用テーブルが未整備のための暫定措置。
+                   将来テーブルを追加したら db 層に fetch/insert/delete を
+                   追加するだけで永続化に移行できるよう構造化してある。
+
+   [認証]
+   Supabase Auth（メール/パスワード）。onAuthStateChange でログイン状態を
+   監視し、未ログイン時は「新規投稿・いいね・保存・拡散・削除・制限」の
+   操作でログインモーダルを表示する（requireLogin()で一元管理）。
+
+   [Coming Soon]
+   [data-coming-soon="ラベル"] を付けた要素はクリックで自動的に
+   トースト表示のみの未実装状態になる。実装時はこの属性を外すだけでよい。
 ===================================================================== */
 
 (() => {
-  const STORAGE_KEY = 'yui_posts_v1';
+  /* ---------------- Supabase 接続設定 ---------------- */
+  // anon key は RLS(Row Level Security) で保護される前提の公開鍵のため
+  // フロントエンドに直接記述して問題ない（Supabase公式の想定用途）。
+  const SUPABASE_URL = 'https://mlekwhuzptiaztsbutgg.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sZWt3aHV6cHRpYXp0c2J1dGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NzA5NjYsImV4cCI6MjEwMjM0Njk2Nn0.xE0Gun8SjiVkz15GaG69f_yfKNkZTfQVOGPX5PzQt4s';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  /* ---------------- データ層（暫定: localStorage） ---------------- */
+  // 「報告」で開くGoogleフォームのURL（仮）
+  const REPORT_FORM_URL = 'https://forms.google.com/';
+
+  /* ---------------- Supabase データ層 ---------------- */
   const db = {
-    load(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      }catch(e){
-        console.warn('投稿データの読み込みに失敗しました', e);
-        return [];
-      }
+    async fetchPosts(){
+      const { data, error } = await supabaseClient
+        .from('posts').select('*').order('created_at', { ascending: false });
+      if(error) throw error;
+      return data || [];
     },
-    save(posts){
-      try{
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-      }catch(e){
-        console.warn('投稿データの保存に失敗しました', e);
-      }
+    async insertPost(userName, content){
+      const { data, error } = await supabaseClient
+        .from('posts').insert({ user_name: userName, content }).select().single();
+      if(error) throw error;
+      return data;
+    },
+    async deletePost(id){
+      const { error } = await supabaseClient.from('posts').delete().eq('id', id);
+      if(error) throw error;
+    },
+    async updateLikes(id, likesCount){
+      const { error } = await supabaseClient.from('posts').update({ likes_count: likesCount }).eq('id', id);
+      if(error) throw error;
+    },
+    async fetchBookmarks(userName){
+      const { data, error } = await supabaseClient.from('bookmarks').select('post_id').eq('user_name', userName);
+      if(error) throw error;
+      return data || [];
+    },
+    async addBookmark(userName, postId){
+      const { error } = await supabaseClient.from('bookmarks').insert({ user_name: userName, post_id: postId });
+      if(error) throw error;
+    },
+    async removeBookmark(userName, postId){
+      const { error } = await supabaseClient.from('bookmarks').delete().eq('user_name', userName).eq('post_id', postId);
+      if(error) throw error;
+    },
+    async fetchReposts(userName){
+      const { data, error } = await supabaseClient.from('reposts').select('post_id').eq('user_name', userName);
+      if(error) throw error;
+      return data || [];
+    },
+    async addRepost(userName, postId){
+      const { error } = await supabaseClient.from('reposts').insert({ user_name: userName, post_id: postId });
+      if(error) throw error;
+    },
+    async removeRepost(userName, postId){
+      const { error } = await supabaseClient.from('reposts').delete().eq('user_name', userName).eq('post_id', postId);
+      if(error) throw error;
+    },
+    async fetchBlocks(blockerName){
+      const { data, error } = await supabaseClient.from('user_blocks').select('blocked_name').eq('blocker_name', blockerName);
+      if(error) throw error;
+      return data || [];
+    },
+    async addBlock(blockerName, blockedName){
+      const { error } = await supabaseClient.from('user_blocks').insert({ blocker_name: blockerName, blocked_name: blockedName });
+      if(error) throw error;
     }
   };
 
-  let posts = db.load();          // [{id, text, createdAt, liked, likeCount, comments:[{id,text,createdAt}]}]
-  let activeTab = 'timeline';      // 'timeline' | 'following' | 'trending'
-  let openReplyId = null;          // 返信フォームを開いている投稿ID
+  /* ---------------- アプリ状態 ---------------- */
+  let currentUser = null;         // Supabase Auth の user オブジェクト（未ログイン時 null）
+  let posts = [];                 // 表示中の投稿（Supabase行 + liked/comments を付加）
+  let userBookmarks = new Set();  // 自分が保存した post_id（文字列）
+  let userReposts = new Set();    // 自分が拡散した post_id（文字列）
+  let userBlocks = new Set();     // 自分が制限した user_name
+  const sessionReplies = {};      // { [postId]: [{id,text,createdAt}] } ※このタブを開いている間だけ保持
+  let activeTab = 'timeline';
+  let openReplyId = null;
+  let openMenuPostId = null;
+  let authMode = 'login';         // 'login' | 'signup'
 
   const el = {
     feedContent: document.getElementById('feedContent'),
     composerInput: document.getElementById('composerInput'),
     postSubmitBtn: document.getElementById('postSubmitBtn'),
     toast: document.getElementById('toast'),
-    tabs: document.querySelectorAll('.feed-tab')
+    tabs: document.querySelectorAll('.feed-tab'),
+    headerAccountArea: document.getElementById('headerAccountArea'),
+    profilePanelBody: document.getElementById('profilePanelBody'),
+    authOverlay: document.getElementById('authModalOverlay'),
+    authForm: document.getElementById('authForm'),
+    authEmail: document.getElementById('authEmail'),
+    authPassword: document.getElementById('authPassword'),
+    authError: document.getElementById('authError'),
+    authSubmitBtn: document.getElementById('authSubmitBtn'),
+    authTabs: document.querySelectorAll('.modal-tab')
   };
 
   /* ---------------- ユーティリティ ---------------- */
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const findPost = (id) => posts.find(p => String(p.id) === String(id));
+  const isLoggedIn = () => !!currentUser;
+  const currentUserName = () => currentUser ? currentUser.email : null;
+  const shortEmail = (email) => !email ? '' : (email.length > 16 ? email.slice(0, 14) + '…' : email);
 
-  const escapeHtml = (str) => str
+  const escapeHtml = (str) => String(str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-  function timeAgo(ts){
+  function timeAgo(isoString){
+    const ts = new Date(isoString).getTime();
     const diff = Math.max(0, Date.now() - ts);
     const min = Math.floor(diff / 60000);
     if(min < 1) return 'たった今';
@@ -606,99 +914,107 @@
     return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
   }
 
-  const personIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  const ICON = {
+    person: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    dots: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`,
+    heart: (filled) => `<svg width="17" height="17" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>`,
+    comment: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    repost: (filled) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${filled ? 'var(--matcha)' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+    link: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>`,
+    bookmark: (filled) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+    trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+    flag: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
+    block: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg>`,
+    logout: `<svg class="logout-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`
+  };
 
   let toastTimer = null;
   function showToast(message){
     el.toast.textContent = message;
     el.toast.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.toast.classList.remove('show'), 2200);
+    toastTimer = setTimeout(() => el.toast.classList.remove('show'), 2400);
   }
 
-  /* ---------------- データ操作（Supabase連携時はここをAPI呼び出しに置換） ---------------- */
-  function createPost(text){
-    posts.unshift({
-      id: uid(),
-      text,
-      createdAt: Date.now(),
-      liked: false,
-      likeCount: 0,
-      comments: []
-    });
-    db.save(posts);
-    renderTimeline();
+  /* ---------------- ログイン必須アクションの共通ガード ---------------- */
+  function requireLogin(){
+    if(isLoggedIn()) return true;
+    openAuthModal();
+    return false;
   }
 
-  function toggleLike(postId){
-    const post = posts.find(p => p.id === postId);
-    if(!post) return;
-    post.liked = !post.liked;
-    post.likeCount += post.liked ? 1 : -1;
-    db.save(posts);
-    renderTimeline(post.liked ? postId : null);
+  /* ---------------- 描画: テンプレート ---------------- */
+  function postMenuTemplate(post){
+    const isOwner = isLoggedIn() && post.user_name === currentUserName();
+    const isSaved = userBookmarks.has(String(post.id));
+    const isReposted = userReposts.has(String(post.id));
+    return `
+    <div class="post-menu">
+      <button class="menu-item ${isReposted ? 'active-state' : ''}" data-action="repost">${ICON.repost(isReposted)}<span>${isReposted ? '拡散済み（解除）' : '拡散'}</span></button>
+      <button class="menu-item" data-action="share">${ICON.link}<span>共有</span></button>
+      <button class="menu-item ${isSaved ? 'active-state' : ''}" data-action="save">${ICON.bookmark(isSaved)}<span>${isSaved ? '保存を解除' : '保存'}</span></button>
+      ${isOwner ? `
+      <div class="menu-divider"></div>
+      <button class="menu-item danger" data-action="delete">${ICON.trash}<span>削除</span></button>` : ''}
+      <div class="menu-divider"></div>
+      <button class="menu-item" data-action="report">${ICON.flag}<span>報告</span></button>
+      ${!isOwner ? `<button class="menu-item" data-action="restrict">${ICON.block}<span>${escapeHtml(post.user_name)}さんを制限</span></button>` : ''}
+    </div>`;
   }
 
-  function addComment(postId, text){
-    const post = posts.find(p => p.id === postId);
-    if(!post) return;
-    post.comments.push({ id: uid(), text, createdAt: Date.now() });
-    db.save(posts);
-    openReplyId = postId; // 返信欄は開いたまま維持する
-    renderTimeline();
-  }
-
-  /* ---------------- 描画 ---------------- */
   function postTemplate(post){
-    const commentsHtml = post.comments.length
-      ? post.comments.map(c => `
+    const isOwner = isLoggedIn() && post.user_name === currentUserName();
+    const displayName = isOwner ? 'あなた' : post.user_name;
+    const isMenuOpen = openMenuPostId === post.id;
+    const isReplyOpen = openReplyId === post.id;
+    const isReposted = userReposts.has(String(post.id));
+    const comments = post.comments || [];
+
+    const commentsHtml = comments.length
+      ? comments.map(c => `
         <div class="reply-item">
-          <div class="avatar avatar-icon">${personIconSvg}</div>
+          <div class="avatar avatar-icon">${ICON.person}</div>
           <div class="reply-bubble">
             <div class="reply-meta">
-              <span class="reply-name">あなた</span>
-              <span class="reply-time">${timeAgo(c.createdAt)}</span>
+              <span class="reply-name">${escapeHtml(isLoggedIn() ? shortEmail(currentUserName()) : 'ゲスト')}</span>
+              <span class="reply-time">${timeAgo(new Date(c.createdAt).toISOString())}</span>
             </div>
             <div class="reply-text">${escapeHtml(c.text)}</div>
           </div>
         </div>`).join('')
       : `<div class="reply-empty">まだ返信はありません。</div>`;
 
-    const isReplyOpen = openReplyId === post.id;
-
     return `
     <article class="post" data-post-id="${post.id}">
       <div class="post-head">
-        <div class="avatar avatar-icon">${personIconSvg}</div>
+        <div class="avatar avatar-icon">${ICON.person}</div>
         <div class="post-body">
           <div class="post-meta">
-            <span class="post-name">あなた</span>
-            <span class="post-time">・${timeAgo(post.createdAt)}</span>
-            <button class="post-more" data-coming-soon="投稿メニュー" aria-label="メニュー">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            </button>
+            <span class="post-name">${escapeHtml(displayName)}</span>
+            <span class="post-time">・${timeAgo(post.created_at)}</span>
+            ${isReposted ? `<span class="repost-badge">${ICON.repost(true)}拡散済み</span>` : ''}
+            <div class="post-menu-wrap">
+              <button class="post-more" data-action="toggle-menu" aria-haspopup="true" aria-expanded="${isMenuOpen}" aria-label="投稿メニュー">${ICON.dots}</button>
+              ${isMenuOpen ? postMenuTemplate(post) : ''}
+            </div>
           </div>
-          <p class="post-text">${escapeHtml(post.text)}</p>
+          <p class="post-text">${escapeHtml(post.content)}</p>
           <div class="post-actions">
             <button class="action-btn like ${post.liked ? 'liked' : ''}" data-action="like">
               <span class="stamp-pop">好</span>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="${post.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-              <span class="like-count">${post.likeCount}</span>
+              ${ICON.heart(post.liked)}
+              <span class="like-count">${post.likes_count ?? 0}</span>
             </button>
             <button class="action-btn comment" data-action="toggle-reply">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>${post.comments.length}</span>
-            </button>
-            <button class="action-btn share" data-coming-soon="共有">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
-              <span>共有</span>
+              ${ICON.comment}
+              <span>${comments.length}</span>
             </button>
           </div>
           ${isReplyOpen ? `
           <div class="reply-section">
             <div class="reply-list">${commentsHtml}</div>
             <div class="reply-form">
-              <div class="avatar avatar-icon">${personIconSvg}</div>
+              <div class="avatar avatar-icon">${ICON.person}</div>
               <div class="reply-input-wrap">
                 <textarea class="reply-textarea" rows="1" placeholder="返信を書く"></textarea>
                 <button class="reply-submit" data-action="submit-reply">返信</button>
@@ -710,41 +1026,34 @@
     </article>`;
   }
 
-  function emptyStateTemplate(){
-    return `
+  const loadingStateTemplate = () => `
+    <div class="empty-state">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <p>投稿を読み込んでいます…</p>
+    </div>`;
+
+  const emptyStateTemplate = () => `
     <div class="empty-state">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <p>まだ投稿がありません。<br>上の入力欄から、最初の一言をつぶやいてみましょう。</p>
     </div>`;
-  }
 
-  function comingSoonFeedTemplate(label){
-    return `
+  const errorStateTemplate = () => `
+    <div class="empty-state">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>
+      <p>投稿の読み込みに失敗しました。<br>通信環境をご確認のうえ、再読み込みしてください。</p>
+    </div>`;
+
+  const comingSoonFeedTemplate = (label) => `
     <div class="empty-state coming-soon-panel">
       <span class="coming-soon-badge">Coming Soon</span>
       <p>「${label}」タイムラインは今後実装予定です。</p>
     </div>`;
-  }
 
-  function renderTimeline(scrollToPostId){
+  /* ---------------- 描画: 反映 ---------------- */
+  function renderTimeline(){
     if(activeTab !== 'timeline') return;
-    el.feedContent.innerHTML = posts.length
-      ? posts.map(postTemplate).join('')
-      : emptyStateTemplate();
-
-    if(scrollToPostId){
-      const target = el.feedContent.querySelector(`[data-post-id="${scrollToPostId}"] .stamp-pop`);
-      if(target){
-        target.classList.remove('play');
-        void target.offsetWidth; // reflow でアニメーションを再生
-        target.classList.add('play');
-      }
-    }
-    // 返信欄を開いた直後はそこへフォーカス
-    if(openReplyId){
-      const ta = el.feedContent.querySelector(`[data-post-id="${openReplyId}"] .reply-textarea`);
-      if(ta) ta.focus();
-    }
+    el.feedContent.innerHTML = posts.length ? posts.map(postTemplate).join('') : emptyStateTemplate();
   }
 
   function renderTab(){
@@ -756,6 +1065,395 @@
     }
   }
 
+  // 1件の投稿DOMだけを差し替える（いいね／返信欄／メニュー開閉など軽量な更新用）
+  function updatePostElement(postId, playStamp){
+    const post = findPost(postId);
+    const oldEl = el.feedContent.querySelector(`[data-post-id="${postId}"]`);
+    if(!post || !oldEl) return;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = postTemplate(post);
+    const newEl = wrapper.firstElementChild;
+    oldEl.replaceWith(newEl);
+    if(playStamp){
+      const stamp = newEl.querySelector('.stamp-pop');
+      if(stamp){ stamp.classList.remove('play'); void stamp.offsetWidth; stamp.classList.add('play'); }
+    }
+    if(openReplyId === postId){
+      const ta = newEl.querySelector('.reply-textarea');
+      if(ta) ta.focus();
+    }
+  }
+
+  function renderHeaderAccount(){
+    el.headerAccountArea.innerHTML = isLoggedIn()
+      ? `<button class="account-chip" data-action="logout" title="ログアウト">
+           <span class="avatar avatar-icon">${ICON.person}</span>
+           <span class="account-email">${escapeHtml(shortEmail(currentUserName()))}</span>
+           ${ICON.logout}
+         </button>`
+      : `<button class="auth-open-btn" data-action="open-auth">ログイン / 新規登録</button>`;
+  }
+
+  function renderProfilePanel(){
+    el.profilePanelBody.innerHTML = isLoggedIn()
+      ? `<div class="profile-logged-in">
+           <div class="avatar avatar-icon" style="width:46px;height:46px;">${ICON.person}</div>
+           <p class="profile-email">${escapeHtml(currentUserName())}</p>
+           <button class="logout-btn" data-action="logout">${ICON.logout}<span>ログアウト</span></button>
+         </div>`
+      : `<div class="profile-guest">
+           <p>ログインすると投稿・いいね・保存・拡散・制限などの機能が使えます。</p>
+           <button class="auth-open-btn" data-action="open-auth" style="width:100%;">ログイン / 新規登録</button>
+         </div>`;
+  }
+
+  function updateComposerState(){
+    el.composerInput.placeholder = isLoggedIn()
+      ? 'いま、何してる？'
+      : 'ログインすると投稿できます（タップしてログイン）';
+    refreshSubmitState();
+  }
+
+  /* ---------------- 認証モーダル ---------------- */
+  function openAuthModal(){
+    el.authError.hidden = true;
+    el.authForm.reset();
+    el.authOverlay.hidden = false;
+    setTimeout(() => el.authEmail.focus(), 50);
+  }
+  function closeAuthModal(){
+    el.authOverlay.hidden = true;
+  }
+  function setAuthMode(mode){
+    authMode = mode;
+    el.authTabs.forEach(t => t.classList.toggle('active', t.dataset.authTab === mode));
+    el.authSubmitBtn.textContent = mode === 'signup' ? '新規登録する' : 'ログインする';
+    el.authPassword.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+    el.authError.hidden = true;
+  }
+  el.authTabs.forEach(tab => tab.addEventListener('click', () => setAuthMode(tab.dataset.authTab)));
+  document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
+  el.authOverlay.addEventListener('click', (e) => { if(e.target === el.authOverlay) closeAuthModal(); });
+
+  el.authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = el.authEmail.value.trim();
+    const password = el.authPassword.value;
+    el.authError.hidden = true;
+    el.authSubmitBtn.disabled = true;
+    el.authSubmitBtn.textContent = '処理中…';
+    try{
+      if(authMode === 'signup'){
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if(error) throw error;
+        showToast('登録しました。確認メールが届いている場合はご確認ください');
+        closeAuthModal();
+      }else{
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if(error) throw error;
+        showToast('ログインしました');
+        closeAuthModal();
+      }
+    }catch(err){
+      el.authError.textContent = err.message || 'エラーが発生しました。もう一度お試しください';
+      el.authError.hidden = false;
+    }finally{
+      el.authSubmitBtn.disabled = false;
+      el.authSubmitBtn.textContent = authMode === 'signup' ? '新規登録する' : 'ログインする';
+    }
+  });
+
+  async function logout(){
+    try{
+      await supabaseClient.auth.signOut();
+      showToast('ログアウトしました');
+    }catch(err){
+      console.error('ログアウトに失敗しました', err);
+      showToast('ログアウトに失敗しました');
+    }
+  }
+
+  /* ---------------- 初期読み込み・認証連動 ---------------- */
+  async function loadUserRelations(){
+    try{
+      const [bookmarkRows, repostRows, blockRows] = await Promise.all([
+        db.fetchBookmarks(currentUserName()),
+        db.fetchReposts(currentUserName()),
+        db.fetchBlocks(currentUserName())
+      ]);
+      userBookmarks = new Set(bookmarkRows.map(r => String(r.post_id)));
+      userReposts = new Set(repostRows.map(r => String(r.post_id)));
+      userBlocks = new Set(blockRows.map(r => r.blocked_name));
+    }catch(err){
+      console.error('ユーザー関連データの取得に失敗しました', err);
+    }
+  }
+
+  async function loadPosts(){
+    if(activeTab === 'timeline') el.feedContent.innerHTML = loadingStateTemplate();
+    try{
+      const rows = await db.fetchPosts();
+      posts = rows
+        .filter(row => !userBlocks.has(row.user_name))
+        .map(row => ({
+          ...row,
+          liked: false,
+          comments: sessionReplies[row.id] || []
+        }));
+      renderTab();
+    }catch(err){
+      console.error('投稿の取得に失敗しました', err);
+      if(activeTab === 'timeline') el.feedContent.innerHTML = errorStateTemplate();
+    }
+  }
+
+  async function handleAuthChange(){
+    renderHeaderAccount();
+    renderProfilePanel();
+    updateComposerState();
+    if(isLoggedIn()){
+      await loadUserRelations();
+    }else{
+      userBookmarks = new Set();
+      userReposts = new Set();
+      userBlocks = new Set();
+    }
+    await loadPosts();
+  }
+
+  /* ---------------- 投稿 ---------------- */
+  async function submitPost(){
+    if(!requireLogin()) return;
+    const text = el.composerInput.value.trim();
+    if(text === '') return;
+    el.postSubmitBtn.disabled = true;
+    el.postSubmitBtn.textContent = '投稿中…';
+    try{
+      const row = await db.insertPost(currentUserName(), text);
+      posts.unshift({ ...row, liked: false, comments: [] });
+      el.composerInput.value = '';
+      if(activeTab === 'timeline') renderTimeline();
+    }catch(err){
+      console.error('投稿に失敗しました', err);
+      showToast('投稿に失敗しました。通信環境をご確認ください');
+    }finally{
+      el.postSubmitBtn.textContent = '投稿する';
+      refreshSubmitState();
+    }
+  }
+
+  /* ---------------- いいね（本セッション内のみのフラグ＋共有カウンター更新） ---------------- */
+  async function toggleLike(postId){
+    if(!requireLogin()) return;
+    const post = findPost(postId);
+    if(!post) return;
+    const wasLiked = !!post.liked;
+    const prevCount = post.likes_count ?? 0;
+
+    post.liked = !wasLiked;
+    post.likes_count = prevCount + (post.liked ? 1 : -1);
+    updatePostElement(postId, post.liked);
+
+    try{
+      await db.updateLikes(postId, post.likes_count);
+    }catch(err){
+      console.error('いいねの更新に失敗しました', err);
+      post.liked = wasLiked;
+      post.likes_count = prevCount;
+      updatePostElement(postId);
+      showToast('いいねに失敗しました。通信環境をご確認ください');
+    }
+  }
+
+  /* ---------------- 返信（セッション内のみ保持） ---------------- */
+  function toggleReply(postId){
+    openReplyId = (openReplyId === postId) ? null : postId;
+    updatePostElement(postId);
+  }
+
+  function addComment(postId, text){
+    const post = findPost(postId);
+    if(!post) return;
+    const comment = { id: uid(), text, createdAt: Date.now() };
+    post.comments = post.comments || [];
+    post.comments.push(comment);
+    if(!sessionReplies[postId]) sessionReplies[postId] = [];
+    sessionReplies[postId].push(comment);
+    updatePostElement(postId);
+  }
+
+  /* ---------------- 投稿メニュー ---------------- */
+  function toggleMenu(postId){
+    const prevOpen = openMenuPostId;
+    openMenuPostId = (openMenuPostId === postId) ? null : postId;
+    if(prevOpen && prevOpen !== postId) updatePostElement(prevOpen);
+    updatePostElement(postId);
+  }
+  function closeMenu(){ openMenuPostId = null; }
+
+  async function sharePost(postId){
+    const url = `${location.origin}${location.pathname}?post_id=${postId}`;
+    closeMenu();
+    updatePostElement(postId);
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(url);
+      }else{
+        const tmp = document.createElement('textarea');
+        tmp.value = url; tmp.style.position = 'fixed'; tmp.style.opacity = '0';
+        document.body.appendChild(tmp); tmp.select();
+        document.execCommand('copy'); document.body.removeChild(tmp);
+      }
+      showToast('投稿のリンクをコピーしました');
+    }catch(err){
+      console.error('リンクのコピーに失敗しました', err);
+      showToast('コピーに失敗しました');
+    }
+  }
+
+  async function toggleSave(postId){
+    if(!requireLogin()) return;
+    closeMenu();
+    const key = String(postId);
+    const already = userBookmarks.has(key);
+    try{
+      if(already){
+        await db.removeBookmark(currentUserName(), postId);
+        userBookmarks.delete(key);
+        showToast('保存を解除しました');
+      }else{
+        await db.addBookmark(currentUserName(), postId);
+        userBookmarks.add(key);
+        showToast('投稿を保存しました');
+      }
+    }catch(err){
+      console.error('保存の更新に失敗しました', err);
+      showToast('保存に失敗しました');
+    }
+    updatePostElement(postId);
+  }
+
+  async function toggleRepost(postId){
+    if(!requireLogin()) return;
+    closeMenu();
+    const key = String(postId);
+    const already = userReposts.has(key);
+    try{
+      if(already){
+        await db.removeRepost(currentUserName(), postId);
+        userReposts.delete(key);
+        showToast('拡散を取り消しました');
+      }else{
+        await db.addRepost(currentUserName(), postId);
+        userReposts.add(key);
+        showToast('投稿を拡散しました');
+      }
+    }catch(err){
+      console.error('拡散の更新に失敗しました', err);
+      showToast('拡散に失敗しました');
+    }
+    updatePostElement(postId);
+  }
+
+  function reportPost(postId){
+    closeMenu();
+    updatePostElement(postId);
+    window.open(REPORT_FORM_URL, '_blank', 'noopener');
+  }
+
+  async function requestDeletePost(postId){
+    if(!requireLogin()) return;
+    closeMenu();
+    updatePostElement(postId);
+    const ok = confirm('この投稿を削除します。よろしいですか？\nこの操作は取り消せません。');
+    if(!ok) return;
+    try{
+      await db.deletePost(postId);
+      posts = posts.filter(p => String(p.id) !== String(postId));
+      const node = el.feedContent.querySelector(`[data-post-id="${postId}"]`);
+      if(node) node.remove();
+      if(posts.length === 0 && activeTab === 'timeline') renderTimeline();
+      showToast('投稿を削除しました');
+    }catch(err){
+      console.error('削除に失敗しました', err);
+      showToast('削除に失敗しました。通信環境をご確認ください');
+    }
+  }
+
+  async function requestRestrictUser(postId){
+    if(!requireLogin()) return;
+    const post = findPost(postId);
+    if(!post) return;
+    closeMenu();
+    updatePostElement(postId);
+    const ok = confirm(`${post.user_name} さんの投稿を今後表示しないようにします。よろしいですか？`);
+    if(!ok) return;
+    try{
+      await db.addBlock(currentUserName(), post.user_name);
+      userBlocks.add(post.user_name);
+      posts = posts.filter(p => p.user_name !== post.user_name);
+      if(activeTab === 'timeline') renderTimeline();
+      showToast('このユーザーの投稿を非表示にしました');
+    }catch(err){
+      console.error('制限に失敗しました', err);
+      showToast('制限に失敗しました。通信環境をご確認ください');
+    }
+  }
+
+  /* ---------------- イベント: フィード内操作（委譲） ---------------- */
+  el.feedContent.addEventListener('click', (e) => {
+    const postEl = e.target.closest('.post');
+    if(!postEl) return;
+    const postId = postEl.dataset.postId;
+    const actionEl = e.target.closest('[data-action]');
+    if(!actionEl) return;
+
+    switch(actionEl.dataset.action){
+      case 'like': toggleLike(postId); break;
+      case 'toggle-reply': toggleReply(postId); break;
+      case 'submit-reply': {
+        const textarea = postEl.querySelector('.reply-textarea');
+        const text = textarea.value.trim();
+        if(text === ''){ textarea.focus(); return; }
+        addComment(postId, text);
+        break;
+      }
+      case 'toggle-menu': toggleMenu(postId); break;
+      case 'repost': toggleRepost(postId); break;
+      case 'share': sharePost(postId); break;
+      case 'save': toggleSave(postId); break;
+      case 'delete': requestDeletePost(postId); break;
+      case 'report': reportPost(postId); break;
+      case 'restrict': requestRestrictUser(postId); break;
+    }
+  });
+
+  // Enter（Shift+Enterは改行）で返信を送信
+  el.feedContent.addEventListener('keydown', (e) => {
+    if(e.target.classList.contains('reply-textarea') && e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      const postId = e.target.closest('.post').dataset.postId;
+      const text = e.target.value.trim();
+      if(text === '') return;
+      addComment(postId, text);
+    }
+  });
+
+  // メニューの外側クリックで閉じる
+  document.addEventListener('click', (e) => {
+    if(openMenuPostId && !e.target.closest('.post-menu-wrap')){
+      const id = openMenuPostId;
+      openMenuPostId = null;
+      updatePostElement(id);
+    }
+  });
+
+  /* ---------------- イベント: ヘッダー／サイドバーのログイン・ログアウト操作 ---------------- */
+  document.addEventListener('click', (e) => {
+    if(e.target.closest('[data-action="open-auth"]')){ openAuthModal(); return; }
+    if(e.target.closest('[data-action="logout"]')){ logout(); return; }
+  });
+
   /* ---------------- イベント: タブ切り替え ---------------- */
   el.tabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -763,6 +1461,7 @@
       tab.classList.add('active');
       activeTab = tab.dataset.tab;
       openReplyId = null;
+      openMenuPostId = null;
       renderTab();
     });
   });
@@ -772,53 +1471,17 @@
     el.postSubmitBtn.disabled = el.composerInput.value.trim() === '';
   }
   el.composerInput.addEventListener('input', refreshSubmitState);
-
-  el.postSubmitBtn.addEventListener('click', () => {
-    const text = el.composerInput.value.trim();
-    if(text === '') return;
-    createPost(text);
-    el.composerInput.value = '';
-    refreshSubmitState();
-  });
-
-  /* ---------------- イベント: 投稿一覧内の操作（いいね／返信）委譲 ---------------- */
-  el.feedContent.addEventListener('click', (e) => {
-    const likeBtn = e.target.closest('[data-action="like"]');
-    if(likeBtn){
-      const postId = likeBtn.closest('.post').dataset.postId;
-      toggleLike(postId);
-      return;
-    }
-
-    const toggleBtn = e.target.closest('[data-action="toggle-reply"]');
-    if(toggleBtn){
-      const postId = toggleBtn.closest('.post').dataset.postId;
-      openReplyId = (openReplyId === postId) ? null : postId;
-      renderTimeline();
-      return;
-    }
-
-    const submitBtn = e.target.closest('[data-action="submit-reply"]');
-    if(submitBtn){
-      const postEl = submitBtn.closest('.post');
-      const postId = postEl.dataset.postId;
-      const textarea = postEl.querySelector('.reply-textarea');
-      const text = textarea.value.trim();
-      if(text === ''){ textarea.focus(); return; }
-      addComment(postId, text);
-      return;
+  el.composerInput.addEventListener('focus', () => {
+    if(!isLoggedIn()){
+      el.composerInput.blur();
+      openAuthModal();
     }
   });
-
-  // Enterキー（Shift+Enterは改行）で返信を送信できるように
-  el.feedContent.addEventListener('keydown', (e) => {
-    if(e.target.classList.contains('reply-textarea') && e.key === 'Enter' && !e.shiftKey){
+  el.postSubmitBtn.addEventListener('click', submitPost);
+  el.composerInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)){
       e.preventDefault();
-      const postEl = e.target.closest('.post');
-      const postId = postEl.dataset.postId;
-      const text = e.target.value.trim();
-      if(text === '') return;
-      addComment(postId, text);
+      submitPost();
     }
   });
 
@@ -830,7 +1493,7 @@
     showToast(`「${target.dataset.comingSoon}」機能は Coming Soon です`);
   });
 
-  /* ---------------- 投稿フォームへスクロール＆フォーカス（サイドバー／モバイルの「投稿する」用） ---------------- */
+  /* ---------------- 投稿フォームへスクロール＆フォーカス ---------------- */
   function focusComposer(){
     el.composerInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     el.composerInput.focus();
@@ -846,9 +1509,18 @@
   document.getElementById('navHome').addEventListener('click', scrollHome);
   document.getElementById('bottomNavHome').addEventListener('click', scrollHome);
 
-  /* ---------------- 初期描画 ---------------- */
-  refreshSubmitState();
-  renderTab();
+  /* ---------------- 初期化 ---------------- */
+  el.feedContent.innerHTML = loadingStateTemplate();
+  renderHeaderAccount();
+  renderProfilePanel();
+  updateComposerState();
+
+  // onAuthStateChange はSupabase-js v2の仕様上、購読直後に現在のセッション状態で
+  // 一度自動的にコールバックが呼ばれるため、初期読み込みもここに一本化している。
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user ?? null;
+    handleAuthChange();
+  });
 })();
 </script>
 
