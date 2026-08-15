@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -47,7 +46,7 @@
   a{color:inherit; text-decoration:none;}
   button{font-family:inherit; cursor:pointer;}
   ::selection{background:var(--shu); color:#fff;}
- 
+
   /* ===== Header ===== */
   header.topbar{
     position:sticky; top:0; z-index:50;
@@ -86,7 +85,7 @@
   .brand-text{ display:flex; flex-direction:column; line-height:1.1;}
   .brand-text .name{ font-family:'Shippori Mincho', serif; font-weight:700; font-size:20px; letter-spacing:.06em;}
   .brand-text .tagline{ font-size:10.5px; color:var(--ink-faint); letter-spacing:.08em; margin-top:2px;}
- 
+
   .search-wrap{ flex:1; max-width:420px; z-index:1;}
   .search-box{
     display:flex; align-items:center; gap:8px;
@@ -95,15 +94,17 @@
     border-radius:20px;
     padding:8px 16px;
     transition:border-color .15s ease, box-shadow .15s ease;
+    cursor:pointer;
   }
   .search-box:focus-within{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,147,90,0.12);}
   .search-box input{
     border:none; outline:none; background:transparent;
     font-family:inherit; font-size:14px; color:var(--ink); width:100%;
+    cursor:pointer;
   }
   .search-box input::placeholder{ color:var(--ink-faint);}
   .search-box svg{ flex-shrink:0; color:var(--ink-faint);}
- 
+
   .topbar-actions{ display:flex; align-items:center; gap:10px; margin-left:auto; z-index:1;}
   .icon-btn{
     width:38px; height:38px; border-radius:50%;
@@ -112,11 +113,6 @@
     position:relative; transition:background .15s ease, color .15s ease;
   }
   .icon-btn:hover{ background:var(--paper-deep); color:var(--ink);}
-  .badge-dot{
-    position:absolute; top:6px; right:6px;
-    width:7px; height:7px; border-radius:50%;
-    background:var(--shu); border:1.5px solid var(--paper);
-  }
   .avatar{
     width:36px; height:36px; border-radius:50%;
     background:linear-gradient(135deg,#7A8B69,#5F7050);
@@ -124,7 +120,10 @@
     font-family:'Shippori Mincho',serif; font-weight:700; font-size:14px;
     flex-shrink:0;
   }
- 
+  /* 未ログイン/汎用ユーザーを表す仮アバター（認証機能実装までの暫定表示） */
+  .avatar-icon{ background:var(--paper-deep); border:1px solid var(--line);}
+  .avatar-icon svg{ width:58%; height:58%; color:var(--ink-faint);}
+
   /* ===== Layout ===== */
   .app-shell{
     max-width:1180px; margin:0 auto;
@@ -135,7 +134,7 @@
     position:relative; z-index:1;
     align-items:start;
   }
- 
+
   /* ===== Left nav ===== */
   nav.side-nav{
     position:sticky; top:88px;
@@ -161,14 +160,15 @@
     font-size:15px; font-weight:700; letter-spacing:.03em;
     box-shadow:0 4px 14px rgba(31,51,80,.25);
     transition:transform .12s ease, background .15s ease;
+    width:100%;
   }
   .compose-btn:hover{ background:#152438; transform:translateY(-1px);}
   .nav-divider{ height:1px; background:var(--line); margin:14px 4px;}
   .nav-foot{ padding:10px 14px; font-size:11.5px; color:var(--ink-faint); line-height:1.7;}
- 
+
   /* ===== Center feed ===== */
   main.feed{ display:flex; flex-direction:column; gap:16px; min-width:0;}
- 
+
   .composer{
     background:var(--card);
     border:1px solid var(--line);
@@ -201,7 +201,8 @@
     transition:background .15s ease, transform .12s ease;
   }
   .post-submit:hover{ background:var(--shu-deep); transform:translateY(-1px);}
- 
+  .post-submit:disabled{ opacity:.45; cursor:not-allowed; transform:none;}
+
   .feed-tabs{
     display:flex; gap:4px; background:var(--card);
     border:1px solid var(--line); border-radius:14px; padding:4px;
@@ -211,9 +212,30 @@
     flex:1; text-align:center; padding:9px 0; border-radius:10px;
     font-size:13.5px; font-weight:700; color:var(--ink-faint);
     transition:background .15s ease,color .15s ease;
+    border:none; background:none; font-family:inherit;
   }
   .feed-tab.active{ background:var(--paper-deep); color:var(--ink);}
- 
+
+  #feedContent{ display:flex; flex-direction:column; gap:16px;}
+
+  /* ===== Empty state ===== */
+  .empty-state{
+    text-align:center; padding:52px 20px;
+    background:var(--card); border:1.5px dashed var(--line); border-radius:16px;
+    color:var(--ink-faint);
+  }
+  .empty-state svg{ color:var(--gold); margin-bottom:14px;}
+  .empty-state p{ font-size:14px; line-height:1.8; max-width:320px; margin:0 auto;}
+
+  /* ===== Coming soon (feed / sidebar 共通) ===== */
+  .coming-soon-panel{ text-align:center; padding:30px 12px; color:var(--ink-faint);}
+  .coming-soon-badge{
+    display:inline-block; font-family:'Shippori Mincho',serif; font-weight:700; font-size:12px;
+    color:var(--shu); border:1px solid var(--shu); border-radius:20px;
+    padding:3px 14px; margin-bottom:10px; transform:rotate(-2deg); letter-spacing:.05em;
+  }
+  .coming-soon-panel p{ font-size:12.5px; line-height:1.7;}
+
   /* ===== Post card ===== */
   .post{
     background:var(--card);
@@ -228,20 +250,10 @@
   .post-body{ flex:1; min-width:0;}
   .post-meta{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
   .post-name{ font-weight:700; font-size:14.5px;}
-  .post-handle,.post-time{ font-size:12.5px; color:var(--ink-faint);}
-  .post-more{ margin-left:auto; color:var(--ink-faint); flex-shrink:0;}
-  .post-text{ margin-top:6px; font-size:15px; line-height:1.75; color:var(--ink); white-space:pre-line;}
-  .post-tag{ color:var(--shu); font-weight:500;}
- 
-  .post-media{
-    margin-top:12px; border-radius:12px; overflow:hidden;
-    border:1px solid var(--line);
-    aspect-ratio:16/9;
-    background:linear-gradient(135deg,#EAE2CF,#DCD0B8);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--ink-faint); font-size:12px; letter-spacing:.05em;
-  }
- 
+  .post-time{ font-size:12.5px; color:var(--ink-faint);}
+  .post-more{ margin-left:auto; color:var(--ink-faint); flex-shrink:0; background:none; border:none; display:flex; padding:2px;}
+  .post-text{ margin-top:6px; font-size:15px; line-height:1.75; color:var(--ink); white-space:pre-line; word-break:break-word;}
+
   .post-actions{
     display:flex; align-items:center; gap:6px;
     margin-top:10px; padding-top:10px; border-top:1px solid var(--line);
@@ -253,9 +265,8 @@
     transition:background .15s ease, color .15s ease;
   }
   .action-btn:hover{ background:var(--paper-deep); color:var(--ink-soft);}
-  .action-btn.comment:hover{ color:var(--ink-soft);}
   .action-btn.share:hover{ color:var(--matcha);}
- 
+
   /* hanko-style like button */
   .action-btn.like{ position:relative; }
   .action-btn.like svg{ transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
@@ -268,15 +279,42 @@
     opacity:0; transform:scale(1.6) rotate(-14deg);
     pointer-events:none;
   }
-  .action-btn.like.liked .stamp-pop{
-    animation:stampIn .5s ease forwards;
-  }
+  .stamp-pop.play{ animation:stampIn .5s ease forwards;}
   @keyframes stampIn{
     0%{ opacity:0; transform:scale(2.2) rotate(-14deg);}
     60%{ opacity:1; transform:scale(.9) rotate(-14deg);}
     100%{ opacity:0; transform:scale(.75) rotate(-14deg);}
   }
- 
+
+  /* ===== Reply (返信) ===== */
+  .reply-section{ margin-top:8px; padding-top:10px; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:10px;}
+  .reply-list{ display:flex; flex-direction:column; gap:8px;}
+  .reply-item{ display:flex; gap:8px;}
+  .reply-item .avatar{ width:26px; height:26px;}
+  .reply-item .avatar-icon svg{ width:56%; height:56%;}
+  .reply-bubble{ background:var(--paper-deep); border-radius:12px; padding:7px 12px; flex:1; min-width:0;}
+  .reply-meta{ display:flex; gap:6px; align-items:baseline;}
+  .reply-name{ font-weight:700; font-size:12px;}
+  .reply-time{ font-size:11px; color:var(--ink-faint);}
+  .reply-text{ font-size:13px; line-height:1.6; margin-top:1px; word-break:break-word;}
+  .reply-empty{ font-size:12px; color:var(--ink-faint); padding:2px 2px 0;}
+  .reply-form{ display:flex; gap:8px; align-items:flex-end;}
+  .reply-form .avatar{ width:26px; height:26px; margin-bottom:2px;}
+  .reply-form .avatar-icon svg{ width:56%; height:56%;}
+  .reply-input-wrap{ flex:1; display:flex; gap:8px; align-items:flex-end;}
+  .reply-form textarea{
+    flex:1; border:1px solid var(--line); border-radius:12px; padding:8px 12px;
+    font-family:inherit; font-size:13px; resize:none; min-height:36px;
+    background:var(--paper); color:var(--ink); line-height:1.5;
+  }
+  .reply-form textarea:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,147,90,0.12);}
+  .reply-submit{
+    background:var(--ink); color:var(--paper); border:none; border-radius:14px;
+    padding:8px 16px; font-size:12.5px; font-weight:700; flex-shrink:0;
+    transition:background .15s ease;
+  }
+  .reply-submit:hover{ background:#152438;}
+
   /* ===== Right sidebar ===== */
   aside.side-panel{
     position:sticky; top:88px;
@@ -286,58 +324,30 @@
     background:var(--card); border:1px solid var(--line);
     border-radius:16px; padding:16px 18px; box-shadow:var(--shadow);
   }
-  .profile-card{ text-align:left;}
-  .profile-cover{
-    height:64px; margin:-16px -18px 0; border-radius:16px 16px 0 0;
-    background:
-      linear-gradient(120deg, rgba(184,147,90,.35), rgba(122,139,105,.25)),
-      repeating-linear-gradient(135deg, rgba(31,51,80,.06) 0 2px, transparent 2px 14px);
-  }
-  .profile-avatar{
-    width:56px; height:56px; border-radius:50%;
-    background:linear-gradient(135deg,#7A8B69,#5F7050);
-    border:3px solid var(--card);
-    margin-top:-30px; margin-left:12px;
-    display:flex; align-items:center; justify-content:center;
-    color:#fff; font-family:'Shippori Mincho',serif; font-weight:700; font-size:20px;
-  }
-  .profile-card .p-name{ margin-top:10px; font-weight:700; font-size:15.5px;}
-  .profile-card .p-handle{ font-size:12.5px; color:var(--ink-faint); margin-top:1px;}
-  .profile-card .p-bio{ font-size:13px; color:var(--ink-soft); line-height:1.6; margin-top:8px;}
-  .profile-stats{ display:flex; gap:16px; margin-top:12px; font-size:12.5px;}
-  .profile-stats b{ color:var(--ink); font-size:14px; margin-right:3px;}
-  .profile-stats span{ color:var(--ink-faint);}
- 
   .panel-title{
     font-family:'Shippori Mincho',serif; font-weight:700; font-size:15px;
-    display:flex; align-items:center; gap:8px; margin-bottom:12px; color:var(--ink);
+    display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--ink);
   }
   .panel-title::before{ content:""; width:4px; height:14px; background:var(--shu); border-radius:2px; display:inline-block;}
- 
-  .trend-item{ padding:9px 0; border-bottom:1px solid var(--line);}
-  .trend-item:last-child{ border-bottom:none; padding-bottom:0;}
-  .trend-tag{ font-size:13.5px; font-weight:700; color:var(--ink);}
-  .trend-count{ font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
- 
-  .suggest-item{ display:flex; align-items:center; gap:10px; padding:8px 0;}
-  .suggest-info{ flex:1; min-width:0;}
-  .suggest-name{ font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .suggest-handle{ font-size:11.5px; color:var(--ink-faint);}
-  .follow-btn{
-    font-size:12px; font-weight:700; padding:6px 14px; border-radius:16px;
-    background:var(--ink); color:var(--paper); border:none; flex-shrink:0;
-    transition:background .15s ease;
-  }
-  .follow-btn:hover{ background:#152438;}
- 
+
   footer.foot-note{
     max-width:1180px; margin:0 auto; padding:0 20px 40px;
     font-size:11.5px; color:var(--ink-faint); letter-spacing:.03em;
   }
- 
+
+  /* ===== Toast (Coming Soon 通知) ===== */
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translate(-50%,16px);
+    background:var(--ink); color:var(--paper); font-size:13px; font-weight:500;
+    padding:11px 22px; border-radius:24px; box-shadow:0 10px 28px rgba(31,51,80,.3);
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+    z-index:300; letter-spacing:.02em;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0);}
+
   /* ===== Bottom nav (mobile) ===== */
   .bottom-nav{ display:none;}
- 
+
   /* ===== Responsive ===== */
   @media (max-width:1020px){
     .app-shell{ grid-template-columns:80px minmax(0,1fr); }
@@ -356,7 +366,7 @@
       background:var(--card); border-top:1px solid var(--line);
       z-index:60; padding-bottom:env(safe-area-inset-bottom);
     }
-    .bottom-nav a{ color:var(--ink-faint); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9.5px;}
+    .bottom-nav a{ color:var(--ink-faint); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9.5px; background:none; border:none; font-family:inherit;}
     .bottom-nav a.active{ color:var(--shu);}
     .bottom-nav .fab{
       width:44px; height:44px; border-radius:50%; background:var(--shu);
@@ -367,7 +377,7 @@
 </style>
 </head>
 <body>
- 
+
 <header class="topbar">
   <div class="topbar-seigaiha">
     <div class="brand">
@@ -377,305 +387,470 @@
         <span class="tagline">つながりを、ゆるやかに。</span>
       </div>
     </div>
- 
+
     <div class="search-wrap">
-      <div class="search-box">
+      <div class="search-box" data-coming-soon="検索">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="キーワードやユーザーを検索">
+        <input type="text" placeholder="キーワードやユーザーを検索" readonly>
       </div>
     </div>
- 
+
     <div class="topbar-actions">
-      <button class="icon-btn" aria-label="通知">
+      <button class="icon-btn" aria-label="通知" data-coming-soon="通知">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="badge-dot"></span>
       </button>
-      <button class="icon-btn" aria-label="メッセージ">
+      <button class="icon-btn" aria-label="メッセージ" data-coming-soon="メッセージ">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </button>
-      <div class="avatar">凪</div>
+      <button class="icon-btn avatar avatar-icon" aria-label="アカウント" data-coming-soon="アカウント" style="border-radius:50%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
     </div>
   </div>
 </header>
- 
+
 <div class="app-shell">
- 
+
   <!-- ===== Left navigation ===== -->
   <nav class="side-nav">
-    <a class="nav-link active" href="#">
+    <a class="nav-link active" href="#" id="navHome">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>ホーム</span>
     </a>
-    <a class="nav-link" href="#">
+    <a class="nav-link" href="#" data-coming-soon="検索">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span>検索</span>
     </a>
-    <a class="nav-link" href="#">
+    <a class="nav-link" href="#" data-coming-soon="通知">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span>通知</span>
     </a>
-    <a class="nav-link" href="#">
+    <a class="nav-link" href="#" data-coming-soon="メッセージ">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>メッセージ</span>
     </a>
-    <a class="nav-link" href="#">
+    <a class="nav-link" href="#" data-coming-soon="プロフィール">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>プロフィール</span>
     </a>
-    <a class="nav-link" href="#">
+    <a class="nav-link" href="#" data-coming-soon="設定">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span>設定</span>
     </a>
- 
-    <button class="compose-btn">
+
+    <button class="compose-btn" id="navComposeBtn">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span>投稿する</span>
     </button>
- 
+
     <div class="nav-divider"></div>
     <div class="nav-foot">結 -yui- β版<br>© 2026 自作SNSプロジェクト</div>
   </nav>
- 
+
   <!-- ===== Center feed ===== -->
   <main class="feed">
- 
+
     <div class="composer">
       <div class="composer-top">
-        <div class="avatar">凪</div>
-        <textarea placeholder="いま、何してる？" rows="2"></textarea>
+        <div class="avatar avatar-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <textarea id="composerInput" placeholder="いま、何してる？" rows="2"></textarea>
       </div>
       <div class="composer-bottom">
         <div class="composer-tools">
-          <button class="tool-btn" aria-label="画像を追加">
+          <button class="tool-btn" aria-label="画像を追加" data-coming-soon="画像の添付">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
           </button>
-          <button class="tool-btn" aria-label="タグを追加">
+          <button class="tool-btn" aria-label="タグを追加" data-coming-soon="タグ付け">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
           </button>
         </div>
-        <button class="post-submit">投稿する</button>
+        <button class="post-submit" id="postSubmitBtn" disabled>投稿する</button>
       </div>
     </div>
- 
+
     <div class="feed-tabs">
-      <div class="feed-tab active">タイムライン</div>
-      <div class="feed-tab">フォロー中</div>
-      <div class="feed-tab">話題</div>
+      <button class="feed-tab active" data-tab="timeline">タイムライン</button>
+      <button class="feed-tab" data-tab="following">フォロー中</button>
+      <button class="feed-tab" data-tab="trending">話題</button>
     </div>
- 
-    <!-- Post 1 -->
-    <article class="post">
-      <div class="post-head">
-        <div class="avatar" style="background:linear-gradient(135deg,#B8935A,#9A7842)">陽</div>
-        <div class="post-body">
-          <div class="post-meta">
-            <span class="post-name">田中 陽子</span>
-            <span class="post-handle">@youko_t</span>
-            <span class="post-time">・3時間前</span>
-            <span class="post-more">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            </span>
-          </div>
-          <p class="post-text">今日は近所の神社まで散歩。金木犀の香りがしてきて、季節の変わり目を実感した🍂
-<span class="post-tag">#秋の記録</span> <span class="post-tag">#散歩日和</span></p>
-          <div class="post-media">画像プレビュー（Supabase Storage 連携予定）</div>
-          <div class="post-actions">
-            <button class="action-btn like" onclick="toggleLike(this)">
-              <span class="stamp-pop">好</span>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-              <span class="like-count">24</span>
-            </button>
-            <button class="action-btn comment">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>6</span>
-            </button>
-            <button class="action-btn share">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
-              <span>共有</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </article>
- 
-    <!-- Post 2 -->
-    <article class="post">
-      <div class="post-head">
-        <div class="avatar" style="background:linear-gradient(135deg,#5A6B80,#324055)">健</div>
-        <div class="post-body">
-          <div class="post-meta">
-            <span class="post-name">佐藤 健太</span>
-            <span class="post-handle">@kenta_dev</span>
-            <span class="post-time">・8時間前</span>
-            <span class="post-more">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            </span>
-          </div>
-          <p class="post-text">Supabaseのリアルタイム機能、思ったより簡単に組み込めた。投稿が届くたびにタイムラインがふわっと更新される感じ、いい体験になりそう。
-<span class="post-tag">#自作SNS</span> <span class="post-tag">#Supabase</span></p>
-          <div class="post-actions">
-            <button class="action-btn like liked" onclick="toggleLike(this)">
-              <span class="stamp-pop">好</span>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-              <span class="like-count">58</span>
-            </button>
-            <button class="action-btn comment">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>13</span>
-            </button>
-            <button class="action-btn share">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
-              <span>共有</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </article>
- 
-    <!-- Post 3 -->
-    <article class="post">
-      <div class="post-head">
-        <div class="avatar" style="background:linear-gradient(135deg,#BB4430,#8F3423)">碧</div>
-        <div class="post-body">
-          <div class="post-meta">
-            <span class="post-name">midori</span>
-            <span class="post-handle">@midori_note</span>
-            <span class="post-time">・昨日</span>
-            <span class="post-more">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            </span>
-          </div>
-          <p class="post-text">お気に入りの器で淹れたほうじ茶。何も予定のない休日はこれだけで満足できる。</p>
-          <div class="post-media">画像プレビュー（Supabase Storage 連携予定）</div>
-          <div class="post-actions">
-            <button class="action-btn like" onclick="toggleLike(this)">
-              <span class="stamp-pop">好</span>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-              <span class="like-count">102</span>
-            </button>
-            <button class="action-btn comment">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>21</span>
-            </button>
-            <button class="action-btn share">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
-              <span>共有</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </article>
- 
+
+    <!-- 投稿一覧 / Coming Soon はここに動的描画される -->
+    <div id="feedContent"></div>
+
   </main>
- 
+
   <!-- ===== Right sidebar ===== -->
   <aside class="side-panel">
-    <div class="panel-card profile-card">
-      <div class="profile-cover"></div>
-      <div class="profile-avatar">凪</div>
-      <div class="p-name">結城 凪</div>
-      <div class="p-handle">@nagi_yui</div>
-      <div class="p-bio">このSNSを作ってる人。GitHub × Supabaseで開発中。</div>
-      <div class="profile-stats">
-        <div><b>128</b><span>フォロー</span></div>
-        <div><b>96</b><span>フォロワー</span></div>
-        <div><b>34</b><span>投稿</span></div>
+    <div class="panel-card">
+      <div class="panel-title">プロフィール</div>
+      <div class="coming-soon-panel">
+        <span class="coming-soon-badge">Coming Soon</span>
+        <p>ユーザー登録・ログイン機能は<br>今後実装予定です。</p>
       </div>
     </div>
- 
+
     <div class="panel-card">
       <div class="panel-title">話題のタグ</div>
-      <div class="trend-item"><div class="trend-tag">#自作SNS</div><div class="trend-count">218件の投稿</div></div>
-      <div class="trend-item"><div class="trend-tag">#Supabase</div><div class="trend-count">154件の投稿</div></div>
-      <div class="trend-item"><div class="trend-tag">#秋の記録</div><div class="trend-count">89件の投稿</div></div>
-      <div class="trend-item"><div class="trend-tag">#今日の一枚</div><div class="trend-count">61件の投稿</div></div>
+      <div class="coming-soon-panel">
+        <span class="coming-soon-badge">Coming Soon</span>
+        <p>投稿数に応じたタグ集計機能は<br>今後実装予定です。</p>
+      </div>
     </div>
- 
+
     <div class="panel-card">
       <div class="panel-title">おすすめユーザー</div>
-      <div class="suggest-item">
-        <div class="avatar" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#7A8B69,#5F7050)">遥</div>
-        <div class="suggest-info">
-          <div class="suggest-name">星野 遥</div>
-          <div class="suggest-handle">@haruka_h</div>
-        </div>
-        <button class="follow-btn">フォロー</button>
-      </div>
-      <div class="suggest-item">
-        <div class="avatar" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#B8935A,#9A7842)">蓮</div>
-        <div class="suggest-info">
-          <div class="suggest-name">中村 蓮</div>
-          <div class="suggest-handle">@ren_c</div>
-        </div>
-        <button class="follow-btn">フォロー</button>
+      <div class="coming-soon-panel">
+        <span class="coming-soon-badge">Coming Soon</span>
+        <p>フォロー機能は<br>今後実装予定です。</p>
       </div>
     </div>
   </aside>
- 
+
 </div>
- 
-<footer class="foot-note">結 -yui- はGitHub Pages + Supabaseで構築中の個人開発プロジェクトです。本ページはUIの叩き台であり、データはまだ接続されていません。</footer>
- 
+
+<footer class="foot-note">結 -yui- はGitHub Pages + Supabaseで構築中の個人開発プロジェクトです。本ページはUIの叩き台であり、投稿・いいね・返信はこの端末内に仮保存されています（Supabase連携後にデータベースへ移行予定）。</footer>
+
 <!-- Mobile bottom nav -->
 <nav class="bottom-nav">
-  <a class="active" href="#">
+  <a class="active" href="#" id="bottomNavHome">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
     ホーム
   </a>
-  <a href="#">
+  <a href="#" data-coming-soon="検索">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     検索
   </a>
-  <a href="#" class="fab">
+  <a href="#" class="fab" id="bottomNavCompose">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </a>
-  <a href="#">
+  <a href="#" data-coming-soon="通知">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
     通知
   </a>
-  <a href="#">
+  <a href="#" data-coming-soon="プロフィール">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     自分
   </a>
 </nav>
- 
+
+<div class="toast" id="toast"></div>
+
 <script>
-  // いいねボタンのトグル（見た目のみ。Supabase連携後にDB更新処理を差し替える想定）
-  function toggleLike(btn){
-    const countEl = btn.querySelector('.like-count');
-    let count = parseInt(countEl.textContent, 10);
-    const nowLiked = !btn.classList.contains('liked');
-    btn.classList.toggle('liked');
-    countEl.textContent = nowLiked ? count + 1 : count - 1;
- 
-    // 判子演出の再生（アニメーションをリスタート）
-    const stamp = btn.querySelector('.stamp-pop');
-    if(nowLiked){
-      stamp.style.animation = 'none';
-      void stamp.offsetWidth; // reflow
-      stamp.style.animation = '';
+/* =====================================================================
+   結 -yui- : フロントエンド ロジック
+   -----------------------------------------------------------------
+   このファイルは「投稿 / いいね / 返信」の3機能のみを実装したUI叩き台。
+   データは localStorage に仮保存しており、db オブジェクトの中身を
+   supabase-js の select / insert / update に差し替えるだけで
+   Supabase連携（フェーズ3以降）に移行できるよう設計している。
+   それ以外の機能（検索・通知・DM・プロフィール・タグ・フォロー等）は
+   [data-coming-soon] 属性を付けるだけで自動的に "Coming Soon" トースト
+   が表示される仕組みになっており、実装済みのものから順に
+   data-coming-soon を外していけば機能拡張できる。
+===================================================================== */
+
+(() => {
+  const STORAGE_KEY = 'yui_posts_v1';
+
+  /* ---------------- データ層（暫定: localStorage） ---------------- */
+  const db = {
+    load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){
+        console.warn('投稿データの読み込みに失敗しました', e);
+        return [];
+      }
+    },
+    save(posts){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+      }catch(e){
+        console.warn('投稿データの保存に失敗しました', e);
+      }
+    }
+  };
+
+  let posts = db.load();          // [{id, text, createdAt, liked, likeCount, comments:[{id,text,createdAt}]}]
+  let activeTab = 'timeline';      // 'timeline' | 'following' | 'trending'
+  let openReplyId = null;          // 返信フォームを開いている投稿ID
+
+  const el = {
+    feedContent: document.getElementById('feedContent'),
+    composerInput: document.getElementById('composerInput'),
+    postSubmitBtn: document.getElementById('postSubmitBtn'),
+    toast: document.getElementById('toast'),
+    tabs: document.querySelectorAll('.feed-tab')
+  };
+
+  /* ---------------- ユーティリティ ---------------- */
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  const escapeHtml = (str) => str
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  function timeAgo(ts){
+    const diff = Math.max(0, Date.now() - ts);
+    const min = Math.floor(diff / 60000);
+    if(min < 1) return 'たった今';
+    if(min < 60) return `${min}分前`;
+    const hour = Math.floor(min / 60);
+    if(hour < 24) return `${hour}時間前`;
+    const day = Math.floor(hour / 24);
+    if(day < 7) return `${day}日前`;
+    const d = new Date(ts);
+    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+  }
+
+  const personIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
+  let toastTimer = null;
+  function showToast(message){
+    el.toast.textContent = message;
+    el.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.toast.classList.remove('show'), 2200);
+  }
+
+  /* ---------------- データ操作（Supabase連携時はここをAPI呼び出しに置換） ---------------- */
+  function createPost(text){
+    posts.unshift({
+      id: uid(),
+      text,
+      createdAt: Date.now(),
+      liked: false,
+      likeCount: 0,
+      comments: []
+    });
+    db.save(posts);
+    renderTimeline();
+  }
+
+  function toggleLike(postId){
+    const post = posts.find(p => p.id === postId);
+    if(!post) return;
+    post.liked = !post.liked;
+    post.likeCount += post.liked ? 1 : -1;
+    db.save(posts);
+    renderTimeline(post.liked ? postId : null);
+  }
+
+  function addComment(postId, text){
+    const post = posts.find(p => p.id === postId);
+    if(!post) return;
+    post.comments.push({ id: uid(), text, createdAt: Date.now() });
+    db.save(posts);
+    openReplyId = postId; // 返信欄は開いたまま維持する
+    renderTimeline();
+  }
+
+  /* ---------------- 描画 ---------------- */
+  function postTemplate(post){
+    const commentsHtml = post.comments.length
+      ? post.comments.map(c => `
+        <div class="reply-item">
+          <div class="avatar avatar-icon">${personIconSvg}</div>
+          <div class="reply-bubble">
+            <div class="reply-meta">
+              <span class="reply-name">あなた</span>
+              <span class="reply-time">${timeAgo(c.createdAt)}</span>
+            </div>
+            <div class="reply-text">${escapeHtml(c.text)}</div>
+          </div>
+        </div>`).join('')
+      : `<div class="reply-empty">まだ返信はありません。</div>`;
+
+    const isReplyOpen = openReplyId === post.id;
+
+    return `
+    <article class="post" data-post-id="${post.id}">
+      <div class="post-head">
+        <div class="avatar avatar-icon">${personIconSvg}</div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="post-name">あなた</span>
+            <span class="post-time">・${timeAgo(post.createdAt)}</span>
+            <button class="post-more" data-coming-soon="投稿メニュー" aria-label="メニュー">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+          <p class="post-text">${escapeHtml(post.text)}</p>
+          <div class="post-actions">
+            <button class="action-btn like ${post.liked ? 'liked' : ''}" data-action="like">
+              <span class="stamp-pop">好</span>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="${post.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              <span class="like-count">${post.likeCount}</span>
+            </button>
+            <button class="action-btn comment" data-action="toggle-reply">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>${post.comments.length}</span>
+            </button>
+            <button class="action-btn share" data-coming-soon="共有">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+              <span>共有</span>
+            </button>
+          </div>
+          ${isReplyOpen ? `
+          <div class="reply-section">
+            <div class="reply-list">${commentsHtml}</div>
+            <div class="reply-form">
+              <div class="avatar avatar-icon">${personIconSvg}</div>
+              <div class="reply-input-wrap">
+                <textarea class="reply-textarea" rows="1" placeholder="返信を書く"></textarea>
+                <button class="reply-submit" data-action="submit-reply">返信</button>
+              </div>
+            </div>
+          </div>` : ''}
+        </div>
+      </div>
+    </article>`;
+  }
+
+  function emptyStateTemplate(){
+    return `
+    <div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <p>まだ投稿がありません。<br>上の入力欄から、最初の一言をつぶやいてみましょう。</p>
+    </div>`;
+  }
+
+  function comingSoonFeedTemplate(label){
+    return `
+    <div class="empty-state coming-soon-panel">
+      <span class="coming-soon-badge">Coming Soon</span>
+      <p>「${label}」タイムラインは今後実装予定です。</p>
+    </div>`;
+  }
+
+  function renderTimeline(scrollToPostId){
+    if(activeTab !== 'timeline') return;
+    el.feedContent.innerHTML = posts.length
+      ? posts.map(postTemplate).join('')
+      : emptyStateTemplate();
+
+    if(scrollToPostId){
+      const target = el.feedContent.querySelector(`[data-post-id="${scrollToPostId}"] .stamp-pop`);
+      if(target){
+        target.classList.remove('play');
+        void target.offsetWidth; // reflow でアニメーションを再生
+        target.classList.add('play');
+      }
+    }
+    // 返信欄を開いた直後はそこへフォーカス
+    if(openReplyId){
+      const ta = el.feedContent.querySelector(`[data-post-id="${openReplyId}"] .reply-textarea`);
+      if(ta) ta.focus();
     }
   }
- 
-  // フィードタブの切り替え（表示のみ。実データ切替はSupabaseクエリと連動予定）
-  document.querySelectorAll('.feed-tab').forEach(tab=>{
-    tab.addEventListener('click', ()=>{
-      document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
+
+  function renderTab(){
+    if(activeTab === 'timeline'){
+      renderTimeline();
+    }else{
+      const label = activeTab === 'following' ? 'フォロー中' : '話題';
+      el.feedContent.innerHTML = comingSoonFeedTemplate(label);
+    }
+  }
+
+  /* ---------------- イベント: タブ切り替え ---------------- */
+  el.tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      el.tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      openReplyId = null;
+      renderTab();
     });
   });
- 
-  // 投稿ボタン：将来的に Supabase の insert 処理に接続する箇所
-  document.querySelector('.post-submit').addEventListener('click', ()=>{
-    const textarea = document.querySelector('.composer textarea');
-    if(textarea.value.trim() !== ''){
-      alert('投稿内容を送信します（現在はUIモックのため、Supabase連携後にDB保存されます）\n\n内容：\n' + textarea.value);
-      textarea.value = '';
-    } else {
-      textarea.focus();
+
+  /* ---------------- イベント: 投稿フォーム ---------------- */
+  function refreshSubmitState(){
+    el.postSubmitBtn.disabled = el.composerInput.value.trim() === '';
+  }
+  el.composerInput.addEventListener('input', refreshSubmitState);
+
+  el.postSubmitBtn.addEventListener('click', () => {
+    const text = el.composerInput.value.trim();
+    if(text === '') return;
+    createPost(text);
+    el.composerInput.value = '';
+    refreshSubmitState();
+  });
+
+  /* ---------------- イベント: 投稿一覧内の操作（いいね／返信）委譲 ---------------- */
+  el.feedContent.addEventListener('click', (e) => {
+    const likeBtn = e.target.closest('[data-action="like"]');
+    if(likeBtn){
+      const postId = likeBtn.closest('.post').dataset.postId;
+      toggleLike(postId);
+      return;
+    }
+
+    const toggleBtn = e.target.closest('[data-action="toggle-reply"]');
+    if(toggleBtn){
+      const postId = toggleBtn.closest('.post').dataset.postId;
+      openReplyId = (openReplyId === postId) ? null : postId;
+      renderTimeline();
+      return;
+    }
+
+    const submitBtn = e.target.closest('[data-action="submit-reply"]');
+    if(submitBtn){
+      const postEl = submitBtn.closest('.post');
+      const postId = postEl.dataset.postId;
+      const textarea = postEl.querySelector('.reply-textarea');
+      const text = textarea.value.trim();
+      if(text === ''){ textarea.focus(); return; }
+      addComment(postId, text);
+      return;
     }
   });
+
+  // Enterキー（Shift+Enterは改行）で返信を送信できるように
+  el.feedContent.addEventListener('keydown', (e) => {
+    if(e.target.classList.contains('reply-textarea') && e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      const postEl = e.target.closest('.post');
+      const postId = postEl.dataset.postId;
+      const text = e.target.value.trim();
+      if(text === '') return;
+      addComment(postId, text);
+    }
+  });
+
+  /* ---------------- イベント: Coming Soon（未実装機能の共通ハンドラ） ---------------- */
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-coming-soon]');
+    if(!target) return;
+    e.preventDefault();
+    showToast(`「${target.dataset.comingSoon}」機能は Coming Soon です`);
+  });
+
+  /* ---------------- 投稿フォームへスクロール＆フォーカス（サイドバー／モバイルの「投稿する」用） ---------------- */
+  function focusComposer(){
+    el.composerInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.composerInput.focus();
+  }
+  document.getElementById('navComposeBtn').addEventListener('click', focusComposer);
+  document.getElementById('bottomNavCompose').addEventListener('click', (e) => { e.preventDefault(); focusComposer(); });
+
+  /* ---------------- ホームリンク：先頭へスクロール ---------------- */
+  function scrollHome(e){
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.getElementById('navHome').addEventListener('click', scrollHome);
+  document.getElementById('bottomNavHome').addEventListener('click', scrollHome);
+
+  /* ---------------- 初期描画 ---------------- */
+  refreshSubmitState();
+  renderTab();
+})();
 </script>
- 
+
 </body>
 </html>
