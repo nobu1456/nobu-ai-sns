@@ -173,20 +173,29 @@
     white-space:nowrap; transition:background .15s ease;
   }
   .auth-open-btn:hover{ background:#152438;}
+  .account-chip-group{ display:flex; align-items:center; gap:6px;}
   .account-chip{
     display:flex; align-items:center; gap:8px; background:var(--card);
-    border:1px solid var(--line); border-radius:24px; padding:5px 14px 5px 5px;
+    border:1px solid var(--line); border-radius:24px; padding:5px 12px 5px 5px;
     transition:border-color .15s ease, background .15s ease;
   }
   .account-chip:hover{ background:var(--paper-deep);}
   .account-chip .avatar-icon{ width:28px; height:28px;}
-  .account-name{ font-size:12.5px; font-weight:700; color:var(--ink); max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .account-name{ font-size:12.5px; font-weight:700; color:var(--ink); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .account-chip svg.logout-icon{ color:var(--ink-faint); flex-shrink:0;}
 
   .profile-logged-in{ text-align:center; padding:6px 4px 4px;}
   .profile-logged-in .avatar-icon{ margin:0 auto 10px;}
   .profile-name{ font-size:13.5px; font-weight:700; word-break:break-all; margin-bottom:2px; color:var(--ink);}
   .profile-email-sub{ font-size:11px; color:var(--ink-faint); word-break:break-all; margin-bottom:14px;}
+  .profile-btn-row{ display:flex; flex-direction:column; gap:8px;}
+  .edit-name-btn{
+    width:100%; background:var(--paper-deep); color:var(--ink-soft); border:1px solid var(--line);
+    border-radius:20px; padding:9px 0; font-size:12.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .edit-name-btn:hover{ background:var(--line); color:var(--ink);}
   .logout-btn{
     width:100%; background:var(--paper-deep); color:var(--ink-soft); border:1px solid var(--line);
     border-radius:20px; padding:9px 0; font-size:12.5px; font-weight:700;
@@ -767,6 +776,22 @@
   </div>
 </div>
 
+<!-- ===== Profile Edit Modal (表示名の設定・変更) ===== -->
+<div class="modal-overlay" id="profileModalOverlay">
+  <div class="modal-card">
+    <button class="modal-close" id="profileModalClose" aria-label="閉じる">×</button>
+    <h3>表示名を編集</h3>
+    <p class="modal-sub">投稿・返信・いいねなどに表示される名前です</p>
+    <p class="auth-error" id="profileError" hidden></p>
+    <form id="profileForm">
+      <label class="auth-field">表示名
+        <input type="text" id="profileDisplayName" required placeholder="例: ゆい" maxlength="30">
+      </label>
+      <button type="submit" class="auth-submit" id="profileSubmitBtn">保存する</button>
+    </form>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Supabase クライアント（この後の自作スクリプトより先に読み込む） -->
@@ -922,17 +947,30 @@
     authPassword: document.getElementById('authPassword'),
     authError: document.getElementById('authError'),
     authSubmitBtn: document.getElementById('authSubmitBtn'),
-    authTabs: document.querySelectorAll('.modal-tab')
+    authTabs: document.querySelectorAll('.modal-tab'),
+    profileOverlay: document.getElementById('profileModalOverlay'),
+    profileForm: document.getElementById('profileForm'),
+    profileDisplayName: document.getElementById('profileDisplayName'),
+    profileError: document.getElementById('profileError'),
+    profileSubmitBtn: document.getElementById('profileSubmitBtn')
   };
 
   /* ---------------- ユーティリティ ---------------- */
   const findPost = (id) => posts.find(p => String(p.id) === String(id));
   const isLoggedIn = () => !!currentUser;
 
-  // 各テーブルの user_name に使う値：表示名（display_name）優先、未設定ならメールアドレス
+  // 表示名（display_name）が設定されているかどうか
+  function hasCustomDisplayName(){
+    const dn = currentUser && currentUser.user_metadata && currentUser.user_metadata.display_name;
+    return !!(dn && dn.trim());
+  }
+  // 各テーブルの user_name に使う値：表示名（display_name）優先。
+  // 未設定の場合はメールアドレス全体ではなく「@」より前のローカル部分をフォールバックとして使う
+  // （メールアドレスをそのまま画面に出さないための措置。表示名はプロフィール欄からいつでも設定可能）。
   function currentUserName(){
     if(!currentUser) return null;
-    return (currentUser.user_metadata && currentUser.user_metadata.display_name) || currentUser.email;
+    if(hasCustomDisplayName()) return currentUser.user_metadata.display_name.trim();
+    return currentUser.email ? currentUser.email.split('@')[0] : 'ゲスト';
   }
   const shortName = (name) => !name ? '' : (name.length > 16 ? name.slice(0, 14) + '…' : name);
 
@@ -965,7 +1003,8 @@
     trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
     flag: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
     block: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg>`,
-    logout: `<svg class="logout-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`
+    logout: `<svg class="logout-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+    edit: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`
   };
 
   let toastTimer = null;
@@ -1005,8 +1044,10 @@
   function postTemplate(post){
     const isOwner = isLoggedIn() && post.user_name === currentUserName();
     const displayName = isOwner ? 'あなた' : post.user_name;
-    const isMenuOpen = openMenuPostId === post.id;
-    const isReplyOpen = openReplyId === post.id;
+    // ※ openMenuPostId/openReplyId は data-post-id（文字列）由来、post.id はSupabaseのBIGINT（数値）のため
+    //    厳密等価(===)のままだと型不一致で常にfalseになる。String()で揃えて比較する。
+    const isMenuOpen = String(openMenuPostId) === String(post.id);
+    const isReplyOpen = String(openReplyId) === String(post.id);
     const isReposted = userReposts.has(String(post.id));
     const comments = post.comments || [];
 
@@ -1126,24 +1167,29 @@
 
   function renderHeaderAccount(){
     el.headerAccountArea.innerHTML = isLoggedIn()
-      ? `<button class="account-chip" data-action="logout" title="ログアウト">
-           <span class="avatar avatar-icon">${ICON.person}</span>
-           <span class="account-name">${escapeHtml(shortName(currentUserName()))}</span>
-           ${ICON.logout}
-         </button>`
+      ? `<div class="account-chip-group">
+           <button class="account-chip" data-action="logout" title="ログアウト">
+             <span class="avatar avatar-icon">${ICON.person}</span>
+             <span class="account-name">${escapeHtml(shortName(currentUserName()))}</span>
+             ${ICON.logout}
+           </button>
+           <button class="icon-btn" data-action="open-profile-edit" title="表示名を編集" aria-label="表示名を編集">${ICON.edit}</button>
+         </div>`
       : `<button class="auth-open-btn" data-action="open-auth">ログイン / 新規登録</button>`;
   }
 
   function renderProfilePanel(){
     if(isLoggedIn()){
       const displayName = currentUserName();
-      const showEmailSub = displayName !== currentUser.email;
       el.profilePanelBody.innerHTML = `
         <div class="profile-logged-in">
           <div class="avatar avatar-icon" style="width:46px;height:46px;">${ICON.person}</div>
           <p class="profile-name">${escapeHtml(displayName)}</p>
-          ${showEmailSub ? `<p class="profile-email-sub">${escapeHtml(currentUser.email)}</p>` : ''}
-          <button class="logout-btn" data-action="logout">${ICON.logout}<span>ログアウト</span></button>
+          <p class="profile-email-sub">${escapeHtml(currentUser.email)}</p>
+          <div class="profile-btn-row">
+            <button class="edit-name-btn" data-action="open-profile-edit">${ICON.edit}<span>表示名を${hasCustomDisplayName() ? '変更' : '設定'}</span></button>
+            <button class="logout-btn" data-action="logout">${ICON.logout}<span>ログアウト</span></button>
+          </div>
         </div>`;
     }else{
       el.profilePanelBody.innerHTML = `
@@ -1226,6 +1272,48 @@
       showToast('ログアウトに失敗しました');
     }
   }
+
+  /* ---------------- プロフィール編集モーダル（表示名の設定・変更） ---------------- */
+  function openProfileEditModal(){
+    el.profileError.hidden = true;
+    el.profileDisplayName.value = hasCustomDisplayName() ? currentUser.user_metadata.display_name : '';
+    el.profileOverlay.classList.add('is-open');
+    setTimeout(() => el.profileDisplayName.focus(), 50);
+  }
+  function closeProfileEditModal(){
+    el.profileOverlay.classList.remove('is-open');
+  }
+  document.getElementById('profileModalClose').addEventListener('click', closeProfileEditModal);
+  el.profileOverlay.addEventListener('click', (e) => { if(e.target === el.profileOverlay) closeProfileEditModal(); });
+
+  el.profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newName = el.profileDisplayName.value.trim();
+    if(newName === '') return;
+    el.profileError.hidden = true;
+    el.profileSubmitBtn.disabled = true;
+    el.profileSubmitBtn.textContent = '保存中…';
+    try{
+      // display_name はSupabase Authのユーザーメタデータに保存する
+      // （※既存の投稿・返信などに保存済みのuser_nameは過去の値のまま残るため、
+      //    表示名を変更しても過去分の表示は遡って更新されない点に注意）
+      const { data, error } = await supabaseClient.auth.updateUser({ data: { display_name: newName } });
+      if(error) throw error;
+      currentUser = data.user;
+      closeProfileEditModal();
+      renderHeaderAccount();
+      renderProfilePanel();
+      renderTimeline();
+      showToast('表示名を更新しました');
+    }catch(err){
+      console.error('表示名の更新に失敗しました', err);
+      el.profileError.textContent = err.message || '更新に失敗しました。もう一度お試しください';
+      el.profileError.hidden = false;
+    }finally{
+      el.profileSubmitBtn.disabled = false;
+      el.profileSubmitBtn.textContent = '保存する';
+    }
+  });
 
   /* ---------------- 初期読み込み・認証連動 ---------------- */
   async function loadUserRelations(){
@@ -1536,6 +1624,7 @@
   document.addEventListener('click', (e) => {
     if(e.target.closest('[data-action="open-auth"]')){ openAuthModal(); return; }
     if(e.target.closest('[data-action="logout"]')){ logout(); return; }
+    if(e.target.closest('[data-action="open-profile-edit"]')){ if(requireLogin()) openProfileEditModal(); return; }
   });
 
   /* ---------------- イベント: タブ切り替え ---------------- */
